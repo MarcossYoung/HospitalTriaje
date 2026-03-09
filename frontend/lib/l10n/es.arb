@@ -1,0 +1,83 @@
+{
+  "@@locale": "es",
+
+  "appTitle": "HospitalTriaje",
+  "@appTitle": {"description": "Application title"},
+
+  "triageTitle": "Evaluación de Triaje",
+  "triageSubtitle": "Responda las siguientes preguntas para determinar su nivel de urgencia",
+  "nextQuestion": "Siguiente",
+  "startTriage": "Iniciar evaluación",
+  "triageResult": "Resultado del triaje",
+  "triageLevel": "Nivel {level}",
+  "@triageLevel": {
+    "placeholders": {
+      "level": {"type": "int"}
+    }
+  },
+  "triageLabel": "{label}",
+  "@triageLabel": {"placeholders": {"label": {"type": "String"}}},
+  "maxWaitTime": "Tiempo máximo de espera: {minutes} min",
+  "@maxWaitTime": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "complaintCategory": "Categoría: {category}",
+  "@complaintCategory": {"placeholders": {"category": {"type": "String"}}},
+
+  "emergencyTitle": "¡Atención Inmediata Requerida!",
+  "emergencySubtitle": "Siga estas instrucciones mientras espera ayuda",
+  "emergencyDoTitle": "Qué HACER",
+  "emergencyDontTitle": "Qué NO HACER",
+  "callEmergency": "Llamar al 911",
+
+  "hospitalsNearby": "Hospitales cercanos",
+  "hospitalsLoading": "Buscando hospitales...",
+  "hospitalsEmpty": "No se encontraron hospitales disponibles en su área",
+  "waitTime": "{minutes} min de espera",
+  "@waitTime": {"placeholders": {"minutes": {"type": "int"}}},
+  "availableBeds": "{count} camas disponibles",
+  "@availableBeds": {"placeholders": {"count": {"type": "int"}}},
+  "distanceKm": "{km} km",
+  "@distanceKm": {"placeholders": {"km": {"type": "String"}}},
+  "refer": "Derivar a este hospital",
+  "referSuccess": "Ha sido derivado exitosamente",
+  "hospitalDetail": "Detalle del hospital",
+  "specialties": "Especialidades disponibles",
+  "availableNow": "Disponible",
+  "unavailableNow": "No disponible",
+
+  "mapTitle": "Mapa de hospitales",
+
+  "authTitle": "Iniciar sesión",
+  "authSubtitle": "Inicie sesión para guardar sus evaluaciones",
+  "continueAnonymous": "Continuar sin cuenta",
+  "loginWithGoogle": "Continuar con Google",
+  "loginWithEmail": "Correo y contraseña",
+  "email": "Correo electrónico",
+  "password": "Contraseña",
+  "register": "Registrarse",
+  "login": "Iniciar sesión",
+  "logout": "Cerrar sesión",
+  "profileTitle": "Mi perfil",
+  "myEvaluations": "Mis evaluaciones",
+  "deleteAccount": "Eliminar cuenta",
+
+  "offlineBanner": "Sin conexión — mostrando datos en caché",
+  "loading": "Cargando...",
+  "errorGeneric": "Ocurrió un error. Intente de nuevo.",
+  "retry": "Reintentar",
+  "noData": "Sin datos disponibles",
+
+  "fcmPermissionTitle": "Notificaciones",
+  "fcmPermissionBody": "¿Desea recibir notificaciones sobre su triaje y estado del hospital?",
+  "allow": "Permitir",
+  "deny": "Denegar",
+
+  "levelImmediate": "Inmediato",
+  "levelVeryUrgent": "Muy urgente",
+  "levelUrgent": "Urgente",
+  "levelLessUrgent": "Menos urgente",
+  "levelNotUrgent": "No urgente"
+}

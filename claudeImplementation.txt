@@ -1,0 +1,1992 @@
+
+╭─── Claude Code v2.1.49 ──────────────────────────────────────────────────────╮
+│                                           │ Tips for getting started         │
+│            Welcome back Marcos!           │ Run /init to create a CLAUDE.md… │
+│                                           │ ──────────────────────────────── │
+│                                           │ Recent activity                  │
+│                     ✻                     │ No recent activity               │
+│                     |                     │                                  │
+│                    ▟█▙                    │                                  │
+│                  ▐▛███▜▌                  │                                  │
+│                 ▝▜█████▛▘                 │                                  │
+│                   ▘▘ ▝▝                   │                                  │
+│                                           │                                  │
+│          Sonnet 4.6 · Claude Pro          │                                  │
+│   ~\Dev\Projects\HospitalTriaje\backend   │                                  │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Plan to implement                                                            │
+│                                                                              │
+│ HospitalTriaje — Implementation Plan                                         │
+│                                                                              │
+│ Context                                                                      │
+│                                                                              │
+│ A cross-platform mobile + web triage application that guides patients        │
+│ through a self-evaluation                                                    │
+│ (Manchester Triage System), recommends the best nearby hospital based on     │
+│ location, specialist                                                         │
+│ availability and real-time wait times, and delivers emergency action         │
+│ recommendations for critical                                                 │
+│ cases. Hospital staff update their facility status via API tokens. The       │
+│ system must be usable                                                        │
+│ partially offline and push results to patients via FCM/APNs.                 │
+│                                                                              │
+│ ---                                                                          │
+│ Confirmed Requirements                                                       │
+│                                                                              │
+│ Dimension: Frontend                                                          │
+│ Decision: Flutter (Android + iOS + Web, single codebase)                     │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Backend                                                           │
+│ Decision: Python 3.12 + FastAPI (RESTful, async)                             │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Database                                                          │
+│ Decision: PostgreSQL (SQLAlchemy async + Alembic)                            │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Maps                                                              │
+│ Decision: Google Maps Platform (google_maps_flutter)                         │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Triage protocol                                                   │
+│ Decision: Manchester Triage System — 5 levels                                │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Patient auth                                                      │
+│ Decision: Optional (anonymous OR Google / email+password)                    │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Staff auth                                                        │
+│ Decision: Per-hospital API token (no login UI)                               │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Real-time updates                                                 │
+│ Decision: Server-Sent Events (SSE)                                           │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Push notifications                                                │
+│ Decision: Firebase Cloud Messaging (FCM) + APNs                              │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Offline support                                                   │
+│ Decision: Question tree + emergency tips cached locally (Hive)               │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Languages                                                         │
+│ Decision: Spanish only at launch; ARB i18n architecture ready                │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Hosting                                                           │
+│ Decision: Cloud-agnostic Docker + docker-compose                             │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Admin / content                                                   │
+│ Decision: Hospitals seeded via JSON; tips hardcoded in app (MVP)             │
+│ ────────────────────────────────────────                                     │
+│ Dimension: Specialist verification                                           │
+│ Decision: Configured weekly schedule per specialty; staff can override       │
+│                                                                              │
+│ ---                                                                          │
+│ Repository Layout                                                            │
+│                                                                              │
+│ HospitalTriaje/                                                              │
+│ ├── backend/                                                                 │
+│ │   ├── app/                                                                 │
+│ │   │   ├── main.py                  # FastAPI app factory                   │
+│ │   │   ├── config.py                # pydantic-settings                     │
+│ │   │   ├── database.py              # async engine + session                │
+│ │   │   ├── models/                  # SQLAlchemy ORM models                 │
+│ │   │   │   ├── patient.py                                                   │
+│ │   │   │   ├── hospital.py                                                  │
+│ │   │   │   ├── specialty.py                                                 │
+│ │   │   │   ├── hospital_status.py                                           │
+│ │   │   │   ├── triage_session.py                                            │
+│ │   │   │   └── referral.py                                                  │
+│ │   │   ├── schemas/                 # Pydantic request/response             │
+│ │   │   ├── routers/                                                         │
+│ │   │   │   ├── auth.py                                                      │
+│ │   │   │   ├── triage.py                                                    │
+│ │   │   │   ├── hospitals.py                                                 │
+│ │   │   │   ├── patients.py                                                  │
+│ │   │   │   └── stream.py            # SSE endpoint                          │
+│ │   │   ├── services/                                                        │
+│ │   │   │   ├── triage_engine.py     # MTS question-tree traversal           │
+│ │   │   │   ├── hospital_routing.py  # scoring + ranking                     │
+│ │   │   │   ├── sse_manager.py       # in-memory pub/sub                     │
+│ │   │   │   └── notification.py      # firebase-admin FCM                    │
+│ │   │   ├── middleware/                                                      │
+│ │   │   │   └── hospital_token.py    # API token verification                │
+│ │   │   └── seed/                                                            │
+│ │   │       ├── hospitals.json                                               │
+│ │   │       ├── specialists.json                                             │
+│ │   │       └── question_tree.json   # MTS decision tree                     │
+│ │   ├── alembic/                                                             │
+│ │   ├── tests/                                                               │
+│ │   ├── Dockerfile                                                           │
+│ │   └── requirements.txt                                                     │
+│ ├── frontend/                                                                │
+│ │   ├── lib/                                                                 │
+│ │   │   ├── main.dart                                                        │
+│ │   │   ├── l10n/                    # ARB files (es.arb)                    │
+│ │   │   ├── core/                                                            │
+│ │   │   │   ├── theme/                                                       │
+│ │   │   │   ├── router/              # go_router                             │
+│ │   │   │   └── network/             # Dio + interceptors                    │
+│ │   │   ├── features/                                                        │
+│ │   │   │   ├── triage/              # guided evaluation UI + logic          │
+│ │   │   │   ├── hospitals/           # list + detail + SSE listener          │
+│ │   │   │   ├── map/                 # Google Maps screen                    │
+│ │   │   │   ├── auth/                # optional login                        │
+│ │   │   │   ├── emergency/           # do/don't tips (Hive cached)           │
+│ │   │   │   └── notifications/       # FCM setup                             │
+│ │   │   └── shared/                  # widgets, extensions, constants        │
+│ │   ├── pubspec.yaml                                                         │
+│ │   └── Dockerfile                                                           │
+│ ├── docker-compose.yml                                                       │
+│ └── .env.example                                                             │
+│                                                                              │
+│ ---                                                                          │
+│ Database Schema (core tables)                                                │
+│                                                                              │
+│ patients          (id, email, google_id, profile_json, fcm_token,            │
+│ created_at)                                                                  │
+│ hospitals         (id, name, address, lat, lng, phone, api_token_hash)       │
+│ specialties       (id, name_es)                                              │
+│ hospital_specialty(hospital_id, specialty_id, schedule_json,                 │
+│ is_available_override, override_until)                                       │
+│ hospital_status   (id, hospital_id, wait_time_min, available_beds,           │
+│ updated_at)                                                                  │
+│ triage_sessions   (id, patient_id nullable, level, complaint_category,       │
+│ answers_json, created_at)                                                    │
+│ referrals         (id, session_id, hospital_id, status, created_at)          │
+│                                                                              │
+│ ---                                                                          │
+│ Key REST Endpoints                                                           │
+│                                                                              │
+│ Method: GET                                                                  │
+│ Path: /triage/questions                                                      │
+│ Auth: None                                                                   │
+│ Purpose: Full question-tree JSON                                             │
+│ ────────────────────────────────────────                                     │
+│ Method: POST                                                                 │
+│ Path: /triage/evaluate                                                       │
+│ Auth: Optional JWT                                                           │
+│ Purpose: Submit answers → MTS level                                          │
+│ ────────────────────────────────────────                                     │
+│ Method: GET                                                                  │
+│ Path: /hospitals/nearby                                                      │
+│ Auth: None                                                                   │
+│ Purpose: Sorted hospital list (lat, lng, specialty, level)                   │
+│ ────────────────────────────────────────                                     │
+│ Method: GET                                                                  │
+│ Path: /hospitals/{id}                                                        │
+│ Auth: None                                                                   │
+│ Purpose: Hospital detail                                                     │
+│ ────────────────────────────────────────                                     │
+│ Method: GET                                                                  │
+│ Path: /hospitals/stream                                                      │
+│ Auth: None                                                                   │
+│ Purpose: SSE: live wait-time events                                          │
+│ ────────────────────────────────────────                                     │
+│ Method: POST                                                                 │
+│ Path: /hospitals/{id}/status                                                 │
+│ Auth: API token                                                              │
+│ Purpose: Update wait time + capacity                                         │
+│ ────────────────────────────────────────                                     │
+│ Method: POST                                                                 │
+│ Path: /hospitals/{id}/specialists/{sid}/override                             │
+│ Auth: API token                                                              │
+│ Purpose: Override specialist availability                                    │
+│ ────────────────────────────────────────                                     │
+│ Method: POST                                                                 │
+│ Path: /auth/register                                                         │
+│ Auth: None                                                                   │
+│ Purpose: Email registration                                                  │
+│ ────────────────────────────────────────                                     │
+│ Method: POST                                                                 │
+│ Path: /auth/login                                                            │
+│ Auth: None                                                                   │
+│ Purpose: JWT issue                                                           │
+│ ────────────────────────────────────────                                     │
+│ Method: POST                                                                 │
+│ Path: /auth/google                                                           │
+│ Auth: None                                                                   │
+│ Purpose: Google OAuth exchange                                               │
+│ ────────────────────────────────────────                                     │
+│ Method: GET                                                                  │
+│ Path: /patients/me                                                           │
+│ Auth: JWT                                                                    │
+│ Purpose: Patient profile                                                     │
+│ ────────────────────────────────────────                                     │
+│ Method: POST                                                                 │
+│ Path: /patients/me/fcm-token                                                 │
+│ Auth: JWT                                                                    │
+│ Purpose: Register push token                                                 │
+│ ────────────────────────────────────────                                     │
+│ Method: GET                                                                  │
+│ Path: /patients/me/evaluations                                               │
+│ Auth: JWT                                                                    │
+│ Purpose: Past triage sessions                                                │
+│                                                                              │
+│ ---                                                                          │
+│ MTS Triage Engine                                                            │
+│                                                                              │
+│ - Question tree stored as directed graph in seed/question_tree.json          │
+│ - Each node: { id, question_es, options: [{ label_es, next_node_id }] }      │
+│ - Leaf nodes: { triage_level: 1–5, complaint_category, max_wait_minutes }    │
+│ - triage_engine.py traverses the graph given a list of (node_id,             │
+│ answer_index) pairs                                                          │
+│ - Output: { level, label, max_wait_minutes, complaint_category }             │
+│                                                                              │
+│ Hospital Routing Algorithm                                                   │
+│                                                                              │
+│ score = (distance_km × 0.4) + (wait_time_min × 0.4) - (specialist_match × 10 │
+│  × 0.2)                                                                      │
+│ - Exclude hospitals where required specialist is unavailable at current time │
+│  (schedule + override)                                                       │
+│ - Sort ascending by score; return top 5                                      │
+│                                                                              │
+│ SSE Data Flow                                                                │
+│                                                                              │
+│ Staff POST /hospitals/{id}/status                                            │
+│   → hospital_routing.update_status() persists to DB                          │
+│   → sse_manager.broadcast({ hospital_id, wait_time_min, available_beds,      │
+│ updated_at })                                                                │
+│   → All subscribed SSE generators yield the event                            │
+│   → Flutter SSE client updates Riverpod state                                │
+│   → Map + list UI rebuilds                                                   │
+│                                                                              │
+│ ---                                                                          │
+│ Flutter Key Packages                                                         │
+│                                                                              │
+│ flutter_riverpod: ^2.x       # state management                              │
+│ go_router: ^13.x             # navigation                                    │
+│ dio: ^5.x                    # HTTP + SSE                                    │
+│ google_maps_flutter: ^2.x    # map                                           │
+│ geolocator: ^13.x            # GPS                                           │
+│ hive + hive_flutter: ^2.x    # offline cache                                 │
+│ firebase_messaging: ^15.x    # FCM push                                      │
+│ google_sign_in: ^6.x         # optional auth                                 │
+│ flutter_localizations         # i18n (ARB)                                   │
+│                                                                              │
+│ Python Key Packages                                                          │
+│                                                                              │
+│ fastapi uvicorn[standard]                                                    │
+│ sqlalchemy[asyncio] asyncpg alembic                                          │
+│ python-jose[cryptography] passlib[bcrypt]                                    │
+│ httpx pydantic-settings                                                      │
+│ firebase-admin                                                               │
+│ pytest pytest-asyncio httpx                                                  │
+│                                                                              │
+│ ---                                                                          │
+│ Implementation Phases                                                        │
+│                                                                              │
+│ Phase 1 — Project Scaffolding                                                │
+│                                                                              │
+│ - Create docker-compose.yml (postgres + backend + pgadmin)                   │
+│ - Create .env.example with all required variables                            │
+│ - backend/Dockerfile, requirements.txt                                       │
+│ - FastAPI app factory in main.py; ping endpoint /health                      │
+│ - config.py with pydantic-settings; database.py with async engine            │
+│ - Flutter project init (flutter create frontend), add packages to            │
+│ pubspec.yaml                                                                 │
+│ - go_router setup, blank MaterialApp                                         │
+│                                                                              │
+│ Phase 2 — Database Models + Migrations                                       │
+│                                                                              │
+│ - Define all SQLAlchemy async models (files listed above)                    │
+│ - alembic init + first migration; seed script runs from seed/*.json          │
+│ - Verify tables created: docker-compose up && alembic upgrade head           │
+│                                                                              │
+│ Phase 3 — Auth (Patient)                                                     │
+│                                                                              │
+│ - POST /auth/register + POST /auth/login → JWT issue (python-jose)           │
+│ - POST /auth/google → verify Google ID token, upsert patient                 │
+│ - Flutter auth feature: optional login screen, Riverpod AuthNotifier,        │
+│ persisted JWT in secure storage                                              │
+│                                                                              │
+│ Phase 4 — Triage Engine + Questions API                                      │
+│                                                                              │
+│ - Finalize MTS question tree JSON (Spanish, branching logic for chief        │
+│ complaints)                                                                  │
+│ - Implement triage_engine.py traversal + scoring                             │
+│ - GET /triage/questions endpoint                                             │
+│ - POST /triage/evaluate → persist TriageSession, return MTS result           │
+│ - Flutter triage feature: stepper UI, Hive cache of question tree, offline   │
+│ traversal                                                                    │
+│                                                                              │
+│ Phase 5 — Emergency Recommendations                                          │
+│                                                                              │
+│ - Hardcode tip sets per complaint_category in Flutter                        │
+│ (emergency/tips_data.dart)                                                   │
+│ - After triage: if level 1 or 2, show EmergencyTipsScreen before hospital    │
+│ routing                                                                      │
+│ - Tips also cached via Hive (same cache refresh cycle as question tree)      │
+│                                                                              │
+│ Phase 6 — Hospital Status API + SSE                                          │
+│                                                                              │
+│ - Hospital model + seed data                                                 │
+│ - POST /hospitals/{id}/status with API token middleware                      │
+│ - POST /hospitals/{id}/specialists/{sid}/override                            │
+│ - sse_manager.py: asyncio-based in-memory pub/sub                            │
+│ - GET /hospitals/stream SSE endpoint                                         │
+│ - Flutter hospitals feature: SSE listener with Dio, Riverpod state update    │
+│                                                                              │
+│ Phase 7 — Hospital Routing + Map                                             │
+│                                                                              │
+│ - GET /hospitals/nearby with scoring algorithm                               │
+│ - Specialty schedule evaluation (hospital_specialty.schedule_json)           │
+│ - Flutter map feature: Google Maps with hospital markers, wait-time chips    │
+│ - Tap marker → hospital detail bottom sheet                                  │
+│ - "Derivar" button → creates Referral record via API                         │
+│                                                                              │
+│ Phase 8 — Push Notifications                                                 │
+│                                                                              │
+│ - Firebase project setup; firebase_options.dart via FlutterFire CLI          │
+│ - FCM token registration: POST /patients/me/fcm-token                        │
+│ - Backend: notification.py using firebase-admin to send FCM message after    │
+│ triage evaluate                                                              │
+│ - iOS: APNs entitlements + provisioning profile                              │
+│                                                                              │
+│ Phase 9 — i18n + Polish                                                      │
+│                                                                              │
+│ - flutter_localizations setup; l10n.yaml; es.arb with all string keys        │
+│ - MTS color theme: red/orange/yellow/green/blue per level                    │
+│ - Loading states, error states, empty states throughout                      │
+│ - Offline error banner when hospital data unavailable                        │
+│                                                                              │
+│ Phase 10 — Testing + docker-compose finalization                             │
+│                                                                              │
+│ - Backend: pytest with httpx.AsyncClient for all endpoints                   │
+│ - Flutter: widget tests for triage stepper, unit tests for routing score     │
+│ calculation                                                                  │
+│ - docker-compose.yml final with health checks                                │
+│ - README.md with quickstart instructions                                     │
+│                                                                              │
+│ ---                                                                          │
+│ Verification / End-to-End Test Checklist                                     │
+│                                                                              │
+│ 1. docker-compose up → all services healthy                                  │
+│ 2. GET /health → {"status": "ok"}                                            │
+│ 3. GET /triage/questions → full JSON tree returned                           │
+│ 4. POST /triage/evaluate with sample answers → MTS level 2 returned, session │
+│  persisted                                                                   │
+│ 5. Staff POST /hospitals/1/status with API token → 200 OK                    │
+│ 6. GET /hospitals/stream open in second terminal → receives the status event │
+│ 7. GET /hospitals/nearby?lat=19.4&lng=-99.1&specialty=cardiology&level=2 →   │
+│ sorted list                                                                  │
+│ 8. Flutter (web): complete triage flow → hospital map shown with live wait   │
+│ times                                                                        │
+│ 9. Flutter (device): background app → FCM notification received after triage │
+│ 10. Flutter: disable wifi → question tree loads from Hive cache              │
+│                                                                              │
+│ ---                                                                          │
+│ Hard Constraints / Notes                                                     │
+│                                                                              │
+│ - API tokens for hospitals must be stored as bcrypt hashes in DB; raw token  │
+│ shown only once at creation                                                  │
+│ - All PHI (patient answers, triage results) encrypted in transit (TLS        │
+│ required in production)                                                      │
+│ - GDPR-compatible baseline: no patient data stored for anonymous sessions;   │
+│ logged-in patients can delete their account                                  │
+│ - Google Maps API key must be restricted by app bundle ID / API referrer in  │
+│ Google Cloud Console                                                         │
+│ - SSE connections must be protected against runaway client accumulation (max │
+│  connections per IP)                                                         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+● Read 1 file (ctrl+o to expand)
+
+● The repository is empty. I'll implement all 10 phases systematically. Let me
+  create the task list and begin building.
+
+● Now let me build Phase 1 — all the scaffolding files in parallel:
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/.env.example)
+  ⎿  Wrote 31 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\.env.example
+      1 # ── Database ───────────────────────────────────────────────────
+        ───────────────
+      2 DATABASE_URL=postgresql+asyncpg://triaje:triaje_pass@db:5432/hosp
+        italtriaje
+      3 
+      4 # ── Security ───────────────────────────────────────────────────
+        ───────────────
+      5 SECRET_KEY=change-me-to-a-long-random-string-in-production
+      6 ACCESS_TOKEN_EXPIRE_MINUTES=60
+      7 
+      8 # ── Google OAuth ───────────────────────────────────────────────
+        ───────────────
+      9 GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+     … +21 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/docker-compose.yml)
+  ⎿  Wrote 61 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\docker-compose.yml
+       1 version: "3.9"
+       2 
+       3 services:
+       4   db:
+       5     image: postgres:16-alpine
+       6     restart: unless-stopped
+       7     environment:
+       8       POSTGRES_USER: ${POSTGRES_USER:-triaje}
+       9       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-triaje_pass}
+      10       POSTGRES_DB: ${POSTGRES_DB:-hospitaltriaje}
+     … +51 lines (ctrl+o to expand)
+
+● Write(Dockerfile)
+  ⎿  Wrote 19 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\Dockerfile
+       1 FROM python:3.12-slim
+       2 
+       3 WORKDIR /app
+       4 
+       5 # Install system dependencies
+       6 RUN apt-get update && apt-get install -y --no-install-recommends
+          \
+       7     curl \
+       8     build-essential \
+       9     libpq-dev \
+      10     && rm -rf /var/lib/apt/lists/*
+     … +9 lines (ctrl+o to expand)
+
+● Write(requirements.txt)
+  ⎿  Wrote 31 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\requirements.txt
+       1 # Web framework
+       2 fastapi==0.115.5
+       3 uvicorn[standard]==0.32.1
+       4 
+       5 # Database
+       6 sqlalchemy[asyncio]==2.0.36
+       7 asyncpg==0.30.0
+       8 alembic==1.14.0
+       9 
+      10 # Auth / security
+     … +21 lines (ctrl+o to expand)
+
+● Now the core backend Python files:
+
+● Write(app\__init__.py)
+  ⎿  Wrote 1 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\backend\app\__init__.py
+      1 (No content)
+
+● Write(app\config.py)
+  ⎿  Wrote 39 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\config.py
+       1 from pydantic_settings import BaseSettings, SettingsConfigDict
+       2 from typing import list
+       3 
+       4 
+       5 class Settings(BaseSettings):
+       6     model_config = SettingsConfigDict(
+       7         env_file=".env",
+       8         env_file_encoding="utf-8",
+       9         case_sensitive=False,
+      10         extra="ignore",
+     … +29 lines (ctrl+o to expand)
+
+● Write(app\config.py)
+  ⎿  Removed 1 line
+      1  from pydantic_settings import BaseSettings, SettingsConfigDict
+      2 -from typing import list                                         
+      2  
+      3  
+      4  class Settings(BaseSettings):
+
+● Write(app\database.py)
+  ⎿  Wrote 34 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\database.py
+       1 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionma
+         ker, create_async_engine
+       2 from sqlalchemy.orm import DeclarativeBase
+       3 
+       4 from app.config import settings
+       5 
+       6 engine = create_async_engine(
+       7     settings.database_url,
+       8     echo=settings.app_env == "development",
+       9     pool_pre_ping=True,
+      10     pool_size=10,
+     … +24 lines (ctrl+o to expand)
+
+● Write(app\main.py)
+  ⎿  Wrote 44 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\main.py
+       1 from contextlib import asynccontextmanager
+       2 
+       3 from fastapi import FastAPI
+       4 from fastapi.middleware.cors import CORSMiddleware
+       5 
+       6 from app.config import settings
+       7 from app.routers import auth, hospitals, patients, stream, triag
+         e
+       8 
+       9 
+      10 @asynccontextmanager
+     … +34 lines (ctrl+o to expand)
+
+● Now let me create the models, schemas, routers, services, and middleware
+  directories and files:
+
+● Write(app\models\__init__.py)
+  ⎿  Wrote 16 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\models\__init__.py
+       1 from app.models.hospital import Hospital
+       2 from app.models.hospital_status import HospitalStatus
+       3 from app.models.patient import Patient
+       4 from app.models.referral import Referral
+       5 from app.models.specialty import HospitalSpecialty, Specialty
+       6 from app.models.triage_session import TriageSession
+       7 
+       8 __all__ = [
+       9     "Hospital",
+      10     "HospitalStatus",
+     … +6 lines (ctrl+o to expand)
+
+● Write(app\models\patient.py)
+  ⎿  Wrote 25 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\models\patient.py
+       1 from datetime import datetime
+       2 
+       3 from sqlalchemy import DateTime, String, Text
+       4 from sqlalchemy.orm import Mapped, mapped_column, relationship
+       5 from sqlalchemy.sql import func
+       6 
+       7 from app.database import Base
+       8 
+       9 
+      10 class Patient(Base):
+     … +15 lines (ctrl+o to expand)
+
+● Write(app\models\hospital.py)
+  ⎿  Wrote 26 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\models\hospital.py
+       1 from sqlalchemy import Float, String, Text
+       2 from sqlalchemy.orm import Mapped, mapped_column, relationship
+       3 
+       4 from app.database import Base
+       5 
+       6 
+       7 class Hospital(Base):
+       8     __tablename__ = "hospitals"
+       9 
+      10     id: Mapped[int] = mapped_column(primary_key=True, index=True
+         )
+     … +16 lines (ctrl+o to expand)
+
+● Write(app\models\specialty.py)
+  ⎿  Wrote 37 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\models\specialty.py
+       1 from datetime import datetime
+       2 
+       3 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, S
+         tring, Text
+       4 from sqlalchemy.orm import Mapped, mapped_column, relationship
+       5 
+       6 from app.database import Base
+       7 
+       8 
+       9 class Specialty(Base):
+      10     __tablename__ = "specialties"
+     … +27 lines (ctrl+o to expand)
+
+● Write(app\models\hospital_status.py)
+  ⎿  Wrote 26 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\models\hospital_status.py
+       1 from datetime import datetime
+       2 
+       3 from sqlalchemy import DateTime, ForeignKey, Integer
+       4 from sqlalchemy.orm import Mapped, mapped_column, relationship
+       5 from sqlalchemy.sql import func
+       6 
+       7 from app.database import Base
+       8 
+       9 
+      10 class HospitalStatus(Base):
+     … +16 lines (ctrl+o to expand)
+
+● Write(app\models\triage_session.py)
+  ⎿  Wrote 28 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\models\triage_session.py
+       1 from datetime import datetime
+       2 
+       3 from sqlalchemy import DateTime, ForeignKey, Integer, SmallInteg
+         er, String, Text
+       4 from sqlalchemy.orm import Mapped, mapped_column, relationship
+       5 from sqlalchemy.sql import func
+       6 
+       7 from app.database import Base
+       8 
+       9 
+      10 class TriageSession(Base):
+     … +18 lines (ctrl+o to expand)
+
+● Write(app\models\referral.py)
+  ⎿  Wrote 28 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\models\referral.py
+       1 from datetime import datetime
+       2 
+       3 from sqlalchemy import DateTime, ForeignKey, Integer, String
+       4 from sqlalchemy.orm import Mapped, mapped_column, relationship
+       5 from sqlalchemy.sql import func
+       6 
+       7 from app.database import Base
+       8 
+       9 
+      10 class Referral(Base):
+     … +18 lines (ctrl+o to expand)
+
+● Now the Pydantic schemas:
+
+● Write(app\schemas\__init__.py)
+  ⎿  Wrote 1 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\backend\app\schemas\__init__.py
+      1 (No content)
+
+● Write(app\schemas\auth.py)
+  ⎿  Wrote 28 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\schemas\auth.py
+       1 from pydantic import BaseModel, EmailStr
+       2 
+       3 
+       4 class RegisterRequest(BaseModel):
+       5     email: EmailStr
+       6     password: str
+       7 
+       8 
+       9 class LoginRequest(BaseModel):
+      10     email: EmailStr
+     … +18 lines (ctrl+o to expand)
+
+● Write(app\schemas\triage.py)
+  ⎿  Wrote 29 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\schemas\triage.py
+       1 from pydantic import BaseModel
+       2 
+       3 
+       4 class AnswerItem(BaseModel):
+       5     node_id: str
+       6     answer_index: int
+       7 
+       8 
+       9 class EvaluateRequest(BaseModel):
+      10     answers: list[AnswerItem]
+     … +19 lines (ctrl+o to expand)
+
+● Write(app\schemas\hospital.py)
+  ⎿  Wrote 63 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\schemas\hospital.py
+      1 from datetime import datetime
+      2 
+      3 from pydantic import BaseModel
+      4 
+      5 
+      6 class HospitalStatusUpdate(BaseModel):
+      7     wait_time_min: int
+      8     available_beds: int
+      9 
+     … +53 lines (ctrl+o to expand)
+
+● Write(app\schemas\patient.py)
+  ⎿  Wrote 14 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\schemas\patient.py
+       1 from pydantic import BaseModel
+       2 
+       3 
+       4 class FcmTokenUpdate(BaseModel):
+       5     fcm_token: str
+       6 
+       7 
+       8 class PatientProfile(BaseModel):
+       9     id: int
+      10     email: str | None
+     … +4 lines (ctrl+o to expand)
+
+● Now the middleware:
+
+● Write(app\middleware\__init__.py)
+  ⎿  Wrote 1 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\backend\app\middleware\__init__.py
+      1 (No content)
+
+● Write(app\middleware\hospital_token.py)
+  ⎿  Wrote 25 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\middleware\hospital_token.py
+       1 from fastapi import Depends, HTTPException, Security, status
+       2 from fastapi.security import APIKeyHeader
+       3 from passlib.context import CryptContext
+       4 from sqlalchemy import select
+       5 from sqlalchemy.ext.asyncio import AsyncSession
+       6 
+       7 from app.database import get_db
+       8 from app.models.hospital import Hospital
+       9 
+      10 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+     … +15 lines (ctrl+o to expand)
+
+● Now the services:
+
+● Write(app\services\__init__.py)
+  ⎿  Wrote 1 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\backend\app\services\__init__.py
+      1 (No content)
+
+● Write(app\services\triage_engine.py)
+  ⎿  Wrote 95 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\services\triage_engine.py
+       1 """
+       2 Manchester Triage System question-tree traversal.
+       3 
+       4 The question_tree.json has this shape:
+       5 {
+       6   "nodes": {
+       7     "<node_id>": {
+       8       "question_es": "...",
+       9       "options": [
+      10         {"label_es": "...", "next_node_id": "<id>"},
+     … +85 lines (ctrl+o to expand)
+
+● Write(app\services\sse_manager.py)
+  ⎿  Wrote 52 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\services\sse_manager.py
+      1 """
+      2 In-memory asyncio pub/sub for SSE hospital status broadcasts.
+      3 """
+      4 import asyncio
+      5 import json
+      6 import logging
+      7 from collections import defaultdict
+      8 
+      9 logger = logging.getLogger(__name__)
+     … +42 lines (ctrl+o to expand)
+
+● Write(app\services\hospital_routing.py)
+  ⎿  Wrote 115 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\backend\app\services\hospital_routing.py
+       1 """
+       2 Hospital routing / scoring algorithm.
+       3 
+       4 score = (distance_km × 0.4) + (wait_time_min × 0.4) - (specialis
+         t_match × 10 × 0.2)
+       5 
+       6 Lower score is better.
+       7 """
+       8 import json
+       9 import math
+      10 from datetime import datetime, timezone
+     … +105 lines (ctrl+o to expand)
+
+● Write(app\services\notification.py)
+  ⎿  Wrote 56 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\services\notification.py
+      1 """
+      2 Firebase Cloud Messaging notification service.
+      3 Initialisation is lazy and safe to skip when credentials are miss
+        ing (dev mode).
+      4 """
+      5 import logging
+      6 import os
+      7 from pathlib import Path
+      8 
+      9 logger = logging.getLogger(__name__)
+     … +46 lines (ctrl+o to expand)
+
+● Now the auth helper and routers:
+
+● Write(app\services\auth.py)
+  ⎿  Wrote 43 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\services\auth.py
+      1 from datetime import datetime, timedelta, timezone
+      2 
+      3 import httpx
+      4 from jose import JWTError, jwt
+      5 from passlib.context import CryptContext
+      6 
+      7 from app.config import settings
+      8 
+      9 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+     … +33 lines (ctrl+o to expand)
+
+● Write(app\services\deps.py)
+  ⎿  Wrote 35 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\services\deps.py
+       1 """FastAPI dependency helpers for optional / required auth."""
+       2 from fastapi import Depends, HTTPException, status
+       3 from fastapi.security import HTTPAuthorizationCredentials, HTTPB
+         earer
+       4 from jose import JWTError
+       5 from sqlalchemy import select
+       6 from sqlalchemy.ext.asyncio import AsyncSession
+       7 
+       8 from app.database import get_db
+       9 from app.models.patient import Patient
+      10 from app.services.auth import decode_token
+     … +25 lines (ctrl+o to expand)
+
+● Now the routers:
+
+● Write(app\routers\__init__.py)
+  ⎿  Wrote 1 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\backend\app\routers\__init__.py
+      1 (No content)
+
+● Write(app\routers\auth.py)
+  ⎿  Wrote 58 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\routers\auth.py
+       1 from fastapi import APIRouter, Depends, HTTPException, status
+       2 from sqlalchemy import select
+       3 from sqlalchemy.ext.asyncio import AsyncSession
+       4 
+       5 from app.database import get_db
+       6 from app.models.patient import Patient
+       7 from app.schemas.auth import GoogleAuthRequest, LoginRequest, Re
+         gisterRequest, TokenResponse
+       8 from app.services.auth import create_access_token, hash_password
+         , verify_google_id_token, verify_password
+       9 
+      10 router = APIRouter()
+     … +48 lines (ctrl+o to expand)
+
+● Write(app\routers\triage.py)
+  ⎿  Wrote 66 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\routers\triage.py
+       1 import json
+       2 
+       3 from fastapi import APIRouter, Depends, HTTPException
+       4 from sqlalchemy.ext.asyncio import AsyncSession
+       5 
+       6 from app.database import get_db
+       7 from app.models.patient import Patient
+       8 from app.models.triage_session import TriageSession
+       9 from app.schemas.triage import EvaluateRequest, TriageResult, Tr
+         iageSessionOut
+      10 from app.services import triage_engine
+     … +56 lines (ctrl+o to expand)
+
+● Write(app\routers\triage.py)
+  ⎿  Added 2 lines, removed 5 lines
+      1  import json
+      2  
+      3  from fastapi import APIRouter, Depends, HTTPException
+      4 +from sqlalchemy import select                                   
+      5  from sqlalchemy.ext.asyncio import AsyncSession
+      6  
+      7  from app.database import get_db
+     ...
+      42      db.add(session)
+      43      await db.flush()
+      44  
+      44 -    # Push notification for authenticated patient              
+      45      if patient and patient.fcm_token:
+      46          await send_triage_notification(patient.fcm_token, resul
+          t["level"], result["label"])
+      47  
+     ...
+      50  
+      51  @router.get("/sessions/{session_id}", response_model=TriageSess
+          ionOut)
+      52  async def get_session(session_id: int, db: AsyncSession = Depen
+          ds(get_db)):
+      53 -    from sqlalchemy import select                              
+      54 -    result = await db.execute(                                 
+      55 -        __import__("sqlalchemy", fromlist=["select"]).select(Tr
+         -iageSession).where(TriageSession.id == session_id)             
+      56 -    )                                                          
+      53 +    result = await db.execute(select(TriageSession).where(Triag
+         +eSession.id == session_id))                                    
+      54      session = result.scalar_one_or_none()
+      55      if not session:
+      56          raise HTTPException(status_code=404, detail="Sesión no 
+          encontrada")
+
+● Write(app\routers\hospitals.py)
+  ⎿  Wrote 160 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\backend\app\routers\hospitals.py
+       1 import json
+       2 from datetime import datetime, timezone
+       3 
+       4 from fastapi import APIRouter, Depends, HTTPException, Query
+       5 from sqlalchemy import select
+       6 from sqlalchemy.ext.asyncio import AsyncSession
+       7 
+       8 from app.database import get_db
+       9 from app.middleware.hospital_token import verify_hospital_token
+      10 from app.models.hospital import Hospital
+     … +150 lines (ctrl+o to expand)
+
+● Write(app\routers\patients.py)
+  ⎿  Wrote 53 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\routers\patients.py
+       1 from fastapi import APIRouter, Depends
+       2 from sqlalchemy.ext.asyncio import AsyncSession
+       3 
+       4 from app.database import get_db
+       5 from app.models.patient import Patient
+       6 from app.schemas.patient import FcmTokenUpdate, PatientProfile
+       7 from app.schemas.triage import TriageSessionOut
+       8 from app.services.deps import get_current_patient
+       9 
+      10 router = APIRouter()
+     … +43 lines (ctrl+o to expand)
+
+● Write(app\routers\stream.py)
+  ⎿  Wrote 68 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\routers\stream.py
+       1 """
+       2 SSE endpoint: GET /hospitals/stream
+       3 Clients receive live hospital status events pushed by staff.
+       4 """
+       5 import asyncio
+       6 import logging
+       7 from collections import defaultdict
+       8 
+       9 from fastapi import APIRouter, Request
+      10 from fastapi.responses import StreamingResponse
+     … +58 lines (ctrl+o to expand)
+
+● Now the seed data:
+
+● Write(app\seed\hospitals.json)
+  ⎿  Wrote 47 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\seed\hospitals.json
+       1 [
+       2   {
+       3     "id": 1,
+       4     "name": "Hospital General de México",
+       5     "address": "Dr. Balmis 148, Doctores, 06726 Ciudad de México
+         , CDMX",
+       6     "lat": 19.4151,
+       7     "lng": -99.1505,
+       8     "phone": "+52 55 2789 2000",
+       9     "api_token": "token-hospital-1-change-in-prod"
+      10   },
+     … +37 lines (ctrl+o to expand)
+
+● Write(app\seed\specialists.json)
+  ⎿  Wrote 12 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\seed\specialists.json
+       1 [
+       2   {"id": 1, "name_es": "Cardiología", "slug": "cardiologia"},
+       3   {"id": 2, "name_es": "Neurología", "slug": "neurologia"},
+       4   {"id": 3, "name_es": "Traumatología y Ortopedia", "slug": "tra
+         umatologia"},
+       5   {"id": 4, "name_es": "Pediatría", "slug": "pediatria"},
+       6   {"id": 5, "name_es": "Ginecología y Obstetricia", "slug": "gin
+         ecologia"},
+       7   {"id": 6, "name_es": "Urgencias Generales", "slug": "urgencias
+         "},
+       8   {"id": 7, "name_es": "Medicina Interna", "slug": "medicina-int
+         erna"},
+       9   {"id": 8, "name_es": "Cirugía General", "slug": "cirugia-gener
+         al"},
+      10   {"id": 9, "name_es": "Neumología", "slug": "neumologia"},
+     … +2 lines (ctrl+o to expand)
+
+● Write(app\seed\hospital_specialties.json)
+  ⎿  Wrote 77 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\app\seed\hospital_specialties.json
+       1 [
+       2   {
+       3     "hospital_id": 1,
+       4     "specialty_slug": "cardiologia",
+       5     "schedule": {"mon": ["08:00-20:00"], "tue": ["08:00-20:00"],
+          "wed": ["08:00-20:00"], "thu": ["08:00-20:00"], "fri": ["08:00-
+         17:00"]}
+       6   },
+       7   {
+       8     "hospital_id": 1,
+       9     "specialty_slug": "urgencias",
+      10     "schedule": {"mon": ["00:00-23:59"], "tue": ["00:00-23:59"],
+          "wed": ["00:00-23:59"], "thu": ["00:00-23:59"], "fri": ["00:00-
+         23:59"], "sat": ["00:00-23:59"], "sun": ["00:00-23:59"]}
+     … +67 lines (ctrl+o to expand)
+
+● Now the MTS question tree JSON — a meaningful Spanish-language branching tree:
+
+● Write(app\seed\question_tree.json)
+  ⎿  Wrote 227 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\backend\app\seed\question_tree.json
+       1 {
+       2   "root": "start",
+       3   "nodes": {
+       4     "start": {
+       5       "question_es": "¿Cuál es el motivo principal de su consult
+         a?",
+       6       "options": [
+       7         {"label_es": "Dolor en el pecho o dificultad para respir
+         ar", "next_node_id": "chest_pain_initial"},
+       8         {"label_es": "Pérdida de conciencia, convulsiones o difi
+         cultad para hablar", "next_node_id": "neuro_initial"},
+       9         {"label_es": "Sangrado activo o herida grave", "next_nod
+         e_id": "bleeding_initial"},
+      10         {"label_es": "Dolor abdominal o náuseas intensas", "next
+         _node_id": "abdominal_initial"},
+     … +217 lines (ctrl+o to expand)
+
+● Write(app\seed\__init__.py)
+  ⎿  Wrote 1 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\backend\app\seed\__init__.py
+      1 (No content)
+
+● Write(app\seed\run_seed.py)
+  ⎿  Wrote 106 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\backend\app\seed\run_seed.py
+       1 """
+       2 Seed the database from JSON files.
+       3 Run via:  python -m app.seed.run_seed
+       4 """
+       5 import asyncio
+       6 import json
+       7 import logging
+       8 from pathlib import Path
+       9 
+      10 from passlib.context import CryptContext
+     … +96 lines (ctrl+o to expand)
+
+● Now Alembic setup:
+
+● Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/backend && mkdir -p
+      alembic/versions && touch alembic/__init__.py)
+  ⎿  Done
+
+● Write(alembic.ini)
+  ⎿  Wrote 41 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\alembic.ini
+       1 [alembic]
+       2 script_location = alembic
+       3 prepend_sys_path = .
+       4 version_path_separator = os
+       5 sqlalchemy.url = postgresql+asyncpg://triaje:triaje_pass@db:5432
+         /hospitaltriaje
+       6 
+       7 [post_write_hooks]
+       8 
+       9 [loggers]
+      10 keys = root,sqlalchemy,alembic
+     … +31 lines (ctrl+o to expand)
+
+● Write(alembic\env.py)
+  ⎿  Wrote 53 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\alembic\env.py
+       1 import asyncio
+       2 from logging.config import fileConfig
+       3 
+       4 from sqlalchemy import pool
+       5 from sqlalchemy.ext.asyncio import async_engine_from_config
+       6 
+       7 from alembic import context
+       8 
+       9 # Import all models so Alembic can detect them
+      10 from app.database import Base  # noqa: F401
+     … +43 lines (ctrl+o to expand)
+
+● Write(alembic\script.py.mako)
+  ⎿  Wrote 26 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\alembic\script.py.mako
+       1 """${message}
+       2 
+       3 Revision ID: ${up_revision}
+       4 Revises: ${down_revision | comma,n}
+       5 Create Date: ${create_date}
+       6 
+       7 """
+       8 from typing import Sequence, Union
+       9 
+      10 from alembic import op
+     … +16 lines (ctrl+o to expand)
+
+● Write(alembic\versions\0001_initial_schema.py)
+  ⎿  Wrote 130 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\backend\alembic\versions\0001_initial_schema.py
+       1 """initial schema
+       2 
+       3 Revision ID: 0001
+       4 Revises:
+       5 Create Date: 2026-02-20
+       6 
+       7 """
+       8 from typing import Sequence, Union
+       9 
+      10 import sqlalchemy as sa
+     … +120 lines (ctrl+o to expand)
+
+● Now the backend tests:
+
+● Bash(mkdir -p /c/Users/marco/Dev/Projects/HospitalTriaje/backend/tests)
+  ⎿  Done
+
+● Write(tests\__init__.py)
+  ⎿  Wrote 1 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\backend\tests\__init__.py
+      1 (No content)
+
+● Write(tests\conftest.py)
+  ⎿  Wrote 50 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\tests\conftest.py
+       1 import asyncio
+       2 from typing import AsyncGenerator
+       3 
+       4 import pytest
+       5 import pytest_asyncio
+       6 from httpx import ASGITransport, AsyncClient
+       7 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionma
+         ker, create_async_engine
+       8 
+       9 from app.database import Base, get_db
+      10 from app.main import app
+     … +40 lines (ctrl+o to expand)
+
+● Write(tests\test_health.py)
+  ⎿  Wrote 8 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\backend\tests\test_health.py
+      1 import pytest
+      2 
+      3 
+      4 @pytest.mark.asyncio
+      5 async def test_health(client):
+      6     response = await client.get("/health")
+      7     assert response.status_code == 200
+      8     assert response.json() == {"status": "ok"}
+
+● Write(tests\test_triage_engine.py)
+  ⎿  Wrote 54 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\tests\test_triage_engine.py
+       1 import pytest
+       2 
+       3 from app.services.triage_engine import evaluate, get_full_tree
+       4 
+       5 
+       6 def test_get_full_tree():
+       7     tree = get_full_tree()
+       8     assert "root" in tree
+       9     assert "nodes" in tree
+      10     assert tree["root"] in tree["nodes"]
+     … +44 lines (ctrl+o to expand)
+
+● Write(tests\test_auth.py)
+  ⎿  Wrote 44 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\tests\test_auth.py
+       1 import pytest
+       2 
+       3 
+       4 @pytest.mark.asyncio
+       5 async def test_register_and_login(client):
+       6     # Register
+       7     resp = await client.post("/auth/register", json={"email": "t
+         est@example.com", "password": "secret123"})
+       8     assert resp.status_code == 201
+       9     data = resp.json()
+      10     assert "access_token" in data
+     … +34 lines (ctrl+o to expand)
+
+● Write(tests\test_triage_api.py)
+  ⎿  Wrote 46 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\tests\test_triage_api.py
+       1 import pytest
+       2 
+       3 
+       4 @pytest.mark.asyncio
+       5 async def test_get_questions(client):
+       6     resp = await client.get("/triage/questions")
+       7     assert resp.status_code == 200
+       8     data = resp.json()
+       9     assert "root" in data
+      10     assert "nodes" in data
+     … +36 lines (ctrl+o to expand)
+
+● Write(tests\test_hospital_routing.py)
+  ⎿  Wrote 20 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\backend\tests\test_hospital_routing.py
+      1 import pytest
+      2 
+      3 from app.services.hospital_routing import _haversine
+      4 
+      5 
+      6 def test_haversine_same_point():
+      7     d = _haversine(19.42, -99.13, 19.42, -99.13)
+      8     assert d == pytest.approx(0.0, abs=0.001)
+      9 
+     … +10 lines (ctrl+o to expand)
+
+● Write(pytest.ini)
+  ⎿  Wrote 3 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\backend\pytest.ini
+      1 [pytest]
+      2 asyncio_mode = auto
+      3 testpaths = tests
+
+● Now the Flutter frontend. First the pubspec.yaml, then all the Dart files:
+
+● Bash(mkdir -p /c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/core/{th
+      eme,router,network} \
+        /c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/feature…)
+  ⎿  Done
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/pubspec.yaml)
+  ⎿  Wrote 78 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\pubspec.yaml
+       1 name: hospital_triaje
+       2 description: Sistema de triaje hospitalario — Manchester Triage 
+         System
+       3 publish_to: 'none'
+       4 version: 1.0.0+1
+       5 
+       6 environment:
+       7   sdk: '>=3.3.0 <4.0.0'
+       8   flutter: '>=3.19.0'
+       9 
+      10 dependencies:
+     … +68 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/l10n.yaml)
+  ⎿  Wrote 5 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospital
+     Triaje\frontend\l10n.yaml
+      1 arb-dir: lib/l10n
+      2 template-arb-file: es.arb
+      3 output-localization-file: app_localizations.dart
+      4 output-class: AppLocalizations
+      5 nullable-getter: false
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/l10n/es.arb)
+  ⎿  Wrote 83 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\l10n\es.arb
+       1 {
+       2   "@@locale": "es",
+       3 
+       4   "appTitle": "HospitalTriaje",
+       5   "@appTitle": {"description": "Application title"},
+       6 
+       7   "triageTitle": "Evaluación de Triaje",
+       8   "triageSubtitle": "Responda las siguientes preguntas para dete
+         rminar su nivel de urgencia",
+       9   "nextQuestion": "Siguiente",
+      10   "startTriage": "Iniciar evaluación",
+     … +73 lines (ctrl+o to expand)
+
+● Now the core Dart files:
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/core/theme/app_t
+       heme.dart)
+  ⎿  Wrote 57 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\core\theme\app_theme.dart
+      1 import 'package:flutter/material.dart';
+      2 
+      3 /// MTS triage level colours
+      4 class TriageColors {
+      5   static const level1 = Color(0xFFE53935); // Red — Immediate
+      6   static const level2 = Color(0xFFF57C00); // Orange — Very urgen
+        t
+      7   static const level3 = Color(0xFFFDD835); // Yellow — Urgent
+      8   static const level4 = Color(0xFF43A047); // Green — Less urgent
+      9   static const level5 = Color(0xFF1E88E5); // Blue — Not urgent
+     … +47 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/core/network/api
+       _client.dart)
+  ⎿  Wrote 37 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\core\network\api_client.dart
+       1 import 'package:dio/dio.dart';
+       2 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       3 import 'package:flutter_secure_storage/flutter_secure_storage.da
+         rt';
+       4 
+       5 import '../constants/app_constants.dart';
+       6 
+       7 final _storage = FlutterSecureStorage();
+       8 
+       9 Dio buildDio() {
+      10   final dio = Dio(
+     … +27 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/core/constants/a
+       pp_constants.dart)
+  ⎿  Wrote 14 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\core\constants\app_constants.dart
+      1 class AppConstants {
+      2   static const apiBaseUrl = String.fromEnvironment(
+      3     'API_BASE_URL',
+      4     defaultValue: 'http://localhost:8000',
+      5   );
+      6 
+      7   static const jwtStorageKey = 'hospital_triaje_jwt';
+      8   static const triageTreeHiveKey = 'triage_question_tree';
+      9   static const emergencyTipsHiveKey = 'emergency_tips';
+     … +4 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/core/router/app_
+       router.dart)
+  ⎿  Wrote 69 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\core\router\app_router.dart
+       1 import 'package:go_router/go_router.dart';
+       2 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       3 
+       4 import '../../features/auth/screens/auth_screen.dart';
+       5 import '../../features/emergency/screens/emergency_tips_screen.d
+         art';
+       6 import '../../features/hospitals/screens/hospital_detail_screen.
+         dart';
+       7 import '../../features/hospitals/screens/hospitals_list_screen.d
+         art';
+       8 import '../../features/map/screens/map_screen.dart';
+       9 import '../../features/triage/screens/triage_screen.dart';
+      10 import '../../features/triage/screens/triage_result_screen.dart'
+         ;
+     … +59 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/main.dart)
+  ⎿  Wrote 47 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\main.dart
+       1 import 'package:flutter/material.dart';
+       2 import 'package:flutter_localizations/flutter_localizations.dart
+         ';
+       3 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       4 import 'package:hive_flutter/hive_flutter.dart';
+       5 
+       6 import 'core/constants/app_constants.dart';
+       7 import 'core/router/app_router.dart';
+       8 import 'core/theme/app_theme.dart';
+       9 import 'features/notifications/fcm_service.dart';
+      10 import 'l10n/app_localizations.dart';
+     … +37 lines (ctrl+o to expand)
+
+● Now the feature screens and state management:
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/auth/pr
+       oviders/auth_provider.dart)
+  ⎿  Wrote 108 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\frontend\lib\features\auth\providers\auth_provider.dart
+       1 import 'package:dio/dio.dart';
+       2 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       3 import 'package:flutter_secure_storage/flutter_secure_storage.da
+         rt';
+       4 import 'package:google_sign_in/google_sign_in.dart';
+       5 
+       6 import '../../../core/constants/app_constants.dart';
+       7 import '../../../core/network/api_client.dart';
+       8 
+       9 class AuthState {
+      10   final String? token;
+     … +98 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/auth/sc
+       reens/auth_screen.dart)
+  ⎿  Wrote 108 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\frontend\lib\features\auth\screens\auth_screen.dart
+       1 import 'package:flutter/material.dart';
+       2 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       3 import 'package:go_router/go_router.dart';
+       4 
+       5 import '../providers/auth_provider.dart';
+       6 
+       7 class AuthScreen extends ConsumerStatefulWidget {
+       8   const AuthScreen({super.key});
+       9 
+      10   @override
+     … +98 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/auth/sc
+       reens/profile_screen.dart)
+  ⎿  Wrote 80 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\features\auth\screens\profile_screen.dart
+       1 import 'package:flutter/material.dart';
+       2 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       3 import 'package:go_router/go_router.dart';
+       4 
+       5 import '../providers/auth_provider.dart';
+       6 
+       7 class ProfileScreen extends ConsumerWidget {
+       8   const ProfileScreen({super.key});
+       9 
+      10   @override
+     … +70 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/triage/
+       providers/triage_provider.dart)
+  ⎿  Wrote 147 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\frontend\lib\features\triage\providers\triage_provider.dart
+       1 import 'dart:convert';
+       2 
+       3 import 'package:dio/dio.dart';
+       4 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       5 import 'package:hive/hive.dart';
+       6 
+       7 import '../../../core/constants/app_constants.dart';
+       8 import '../../../core/network/api_client.dart';
+       9 
+      10 class TriageState {
+     … +137 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/triage/
+       screens/triage_screen.dart)
+  ⎿  Wrote 155 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\frontend\lib\features\triage\screens\triage_screen.dart
+       1 import 'package:flutter/material.dart';
+       2 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       3 import 'package:go_router/go_router.dart';
+       4 
+       5 import '../providers/triage_provider.dart';
+       6 import '../../../shared/widgets/offline_banner.dart';
+       7 import '../../../shared/widgets/loading_overlay.dart';
+       8 
+       9 class TriageScreen extends ConsumerStatefulWidget {
+      10   const TriageScreen({super.key});
+     … +145 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/triage/
+       screens/triage_result_screen.dart)
+  ⎿  Wrote 75 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\features\triage\screens\triage_result_screen.dart
+      1 import 'package:flutter/material.dart';
+      2 import 'package:go_router/go_router.dart';
+      3 
+      4 import '../../../core/theme/app_theme.dart';
+      5 
+      6 class TriageResultScreen extends StatelessWidget {
+      7   const TriageResultScreen({super.key, required this.result});
+      8 
+      9   final Map<String, dynamic> result;
+     … +65 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/emergen
+       cy/tips_data.dart)
+  ⎿  Wrote 136 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\frontend\lib\features\emergency\tips_data.dart
+      1 /// Emergency tips per complaint_category.
+      2 /// Each entry has: title, dos (qué hacer), donts (qué no hacer).
+      3 class EmergencyTips {
+      4   const EmergencyTips({
+      5     required this.title,
+      6     required this.dos,
+      7     required this.donts,
+      8     required this.callEmergency,
+      9   });
+     … +126 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/emergen
+       cy/screens/emergency_tips_screen.dart)
+  ⎿  Wrote 164 lines to
+     ..\..\..\..\..\..\c\Users\marco\Dev\Projects\HospitalTriaje\frontend\l
+     ib\features\emergency\screens\emergency_tips_screen.dart
+       1 import 'package:flutter/material.dart';
+       2 import 'package:go_router/go_router.dart';
+       3 import 'package:url_launcher/url_launcher.dart';
+       4 
+       5 import '../../../core/theme/app_theme.dart';
+       6 import '../tips_data.dart';
+       7 
+       8 class EmergencyTipsScreen extends StatelessWidget {
+       9   const EmergencyTipsScreen({
+      10     super.key,
+     … +154 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/hospita
+       ls/providers/hospitals_provider.dart)
+  ⎿  Wrote 117 lines to
+     ..\..\..\..\..\..\c\Users\marco\Dev\Projects\HospitalTriaje\frontend\l
+     ib\features\hospitals\providers\hospitals_provider.dart
+       1 import 'dart:async';
+       2 import 'dart:convert';
+       3 
+       4 import 'package:dio/dio.dart';
+       5 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       6 
+       7 import '../../../core/network/api_client.dart';
+       8 import '../models/hospital_model.dart';
+       9 
+      10 // ─── Hospital list state ─────────────────────────────────────
+         ──────────────
+     … +107 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/hospita
+       ls/models/hospital_model.dart)
+  ⎿  Wrote 82 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\features\hospitals\models\hospital_model.dart
+       1 class HospitalModel {
+       2   const HospitalModel({
+       3     required this.id,
+       4     required this.name,
+       5     required this.address,
+       6     required this.lat,
+       7     required this.lng,
+       8     this.phone,
+       9     this.waitTimeMin,
+      10     this.availableBeds,
+     … +72 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/hospita
+       ls/screens/hospitals_list_screen.dart)
+  ⎿  Wrote 144 lines to
+     ..\..\..\..\..\..\c\Users\marco\Dev\Projects\HospitalTriaje\frontend\l
+     ib\features\hospitals\screens\hospitals_list_screen.dart
+       1 import 'package:flutter/material.dart';
+       2 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       3 import 'package:geolocator/geolocator.dart';
+       4 import 'package:go_router/go_router.dart';
+       5 
+       6 import '../providers/hospitals_provider.dart';
+       7 import '../models/hospital_model.dart';
+       8 
+       9 class HospitalsListScreen extends ConsumerStatefulWidget {
+      10   const HospitalsListScreen({super.key});
+     … +134 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/hospita
+       ls/screens/hospital_detail_screen.dart)
+  ⎿  Wrote 147 lines to
+     ..\..\..\..\..\..\c\Users\marco\Dev\Projects\HospitalTriaje\frontend\l
+     ib\features\hospitals\screens\hospital_detail_screen.dart
+       1 import 'package:dio/dio.dart';
+       2 import 'package:flutter/material.dart';
+       3 import 'package:flutter_riverpod/flutter_riverpod.dart';
+       4 
+       5 import '../../../core/network/api_client.dart';
+       6 import '../models/hospital_model.dart';
+       7 
+       8 class HospitalDetailScreen extends ConsumerStatefulWidget {
+       9   const HospitalDetailScreen({super.key, required this.hospitalI
+         d});
+      10   final int hospitalId;
+     … +137 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/map/scr
+       eens/map_screen.dart)
+  ⎿  Wrote 164 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospit
+     alTriaje\frontend\lib\features\map\screens\map_screen.dart
+      1 import 'package:flutter/material.dart';
+      2 import 'package:flutter_riverpod/flutter_riverpod.dart';
+      3 import 'package:geolocator/geolocator.dart';
+      4 import 'package:go_router/go_router.dart';
+      5 import 'package:google_maps_flutter/google_maps_flutter.dart';
+      6 
+      7 import '../../hospitals/models/hospital_model.dart';
+      8 import '../../hospitals/providers/hospitals_provider.dart';
+      9 import '../../../core/theme/app_theme.dart';
+     … +154 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/features/notific
+       ations/fcm_service.dart)
+  ⎿  Wrote 33 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\features\notifications\fcm_service.dart
+       1 import 'package:flutter/foundation.dart';
+       2 
+       3 class FcmService {
+       4   static Future<void> initialize() async {
+       5     try {
+       6       // Firebase initialization would go here.
+       7       // In a real setup: await Firebase.initializeApp(options: 
+         DefaultFirebaseOptions.currentPlatform);
+       8       // Then: FirebaseMessaging.onBackgroundMessage(_background
+         Handler);
+       9       // For now, we skip silently if Firebase is not configured
+          (dev mode).
+      10       if (kDebugMode) {
+     … +23 lines (ctrl+o to expand)
+
+● Now the shared widgets:
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/shared/widgets/m
+       ain_scaffold.dart)
+  ⎿  Wrote 44 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\shared\widgets\main_scaffold.dart
+       1 import 'package:flutter/material.dart';
+       2 import 'package:go_router/go_router.dart';
+       3 
+       4 class MainScaffold extends StatelessWidget {
+       5   const MainScaffold({super.key, required this.child});
+       6   final Widget child;
+       7 
+       8   static int _locationToIndex(String location) {
+       9     if (location.startsWith('/triage')) return 0;
+      10     if (location.startsWith('/hospitals')) return 1;
+     … +34 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/shared/widgets/o
+       ffline_banner.dart)
+  ⎿  Wrote 24 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\shared\widgets\offline_banner.dart
+       1 import 'package:flutter/material.dart';
+       2 
+       3 class OfflineBanner extends StatelessWidget {
+       4   const OfflineBanner({super.key});
+       5 
+       6   @override
+       7   Widget build(BuildContext context) {
+       8     return Container(
+       9       width: double.infinity,
+      10       color: Colors.orange.shade700,
+     … +14 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib/shared/widgets/l
+       oading_overlay.dart)
+  ⎿  Wrote 30 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\lib\shared\widgets\loading_overlay.dart
+       1 import 'package:flutter/material.dart';
+       2 
+       3 class LoadingOverlay extends StatelessWidget {
+       4   const LoadingOverlay({super.key, this.message});
+       5   final String? message;
+       6 
+       7   @override
+       8   Widget build(BuildContext context) {
+       9     return Container(
+      10       color: Colors.black26,
+     … +20 lines (ctrl+o to expand)
+
+● Now the Flutter tests:
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/test/triage_engine_t
+       est.dart)
+  ⎿  Wrote 54 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\test\triage_engine_test.dart
+       1 import 'dart:convert';
+       2 import 'package:flutter_test/flutter_test.dart';
+       3 
+       4 // Pure Dart re-implementation of the routing score formula for 
+         unit testing.
+       5 double routingScore({
+       6   required double distanceKm,
+       7   required int waitTimeMin,
+       8   required bool specialistMatch,
+       9 }) {
+      10   return (distanceKm * 0.4) + (waitTimeMin * 0.4) - (specialistM
+         atch ? 10 * 0.2 : 0);
+     … +44 lines (ctrl+o to expand)
+
+● Now the frontend Dockerfile and assets setup:
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/Dockerfile)
+  ⎿  Wrote 13 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\Dockerfile
+       1 FROM ghcr.io/cirruslabs/flutter:stable AS builder
+       2 
+       3 WORKDIR /app
+       4 COPY pubspec.yaml pubspec.lock* ./
+       5 RUN flutter pub get
+       6 
+       7 COPY . .
+       8 RUN flutter build web --release --dart-define=API_BASE_URL=http:
+         //localhost:8000
+       9 
+      10 FROM nginx:alpine
+     … +3 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/nginx.conf)
+  ⎿  Wrote 25 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\nginx.conf
+       1 server {
+       2     listen 80;
+       3     server_name _;
+       4     root /usr/share/nginx/html;
+       5     index index.html;
+       6 
+       7     # Flutter web — SPA routing
+       8     location / {
+       9         try_files $uri $uri/ /index.html;
+      10     }
+     … +15 lines (ctrl+o to expand)
+
+● Now create the placeholder asset directories:
+
+● Bash(mkdir -p /c/Users/marco/Dev/Projects/HospitalTriaje/frontend/assets/{imag
+      es,icons,fonts} && touch
+      /c/Users/marco/Dev/Projects/HospitalTriaje/frontend/assets/ima…)
+  ⎿  Done
+
+● Now create the README and finalize:
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/README.md)
+  ⎿  Wrote 177 lines to
+     ..\..\..\..\..\..\c\Users\marco\Dev\Projects\HospitalTriaje\README.md
+       1 # HospitalTriaje
+       2 
+       3 Sistema de triaje hospitalario basado en el **Manchester Triage 
+         System (MTS)** — aplicación
+       4 cross-platform (Android · iOS · Web) con backend FastAPI y Postg
+         reSQL.
+       5 
+       6 ---
+       7 
+       8 ## Arquitectura
+       9 
+      10 | Capa | Tecnología |
+     … +167 lines (ctrl+o to expand)
+
+● Now let me add aiosqlite to requirements (needed for SQLite in tests) and fix
+  the url_launcher missing import in pubspec:
+
+● Update(requirements.txt)
+  ⎿  Error editing file
+
+● Read 1 file (ctrl+o to expand)
+
+● Update(requirements.txt)
+  ⎿  Added 1 line
+      26  pytest==8.3.4
+      27  pytest-asyncio==0.24.0
+      28  pytest-cov==6.0.0
+      29 +aiosqlite==0.20.0                                              
+      30  
+      31  # Dev / lint (optional, helpful in container)
+      32  ruff==0.8.4
+
+● Add url_launcher to pubspec (used in emergency screen):
+
+● Update(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/pubspec.yaml)
+  ⎿  Added 3 lines
+      43    # Secure storage
+      44    flutter_secure_storage: ^9.2.2
+      45  
+      46 +  # URL launching (tel:, etc.)                                 
+      47 +  url_launcher: ^6.3.0                                         
+      48 +                                                               
+      49    # Utilities
+      50    intl: ^0.19.0
+      51    equatable: ^2.0.5
+
+● Now add flutter create scaffold files (android, ios, web manifests) that
+  Flutter needs:
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/web/index.html)
+  ⎿  Wrote 22 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\web\index.html
+       1 <!DOCTYPE html>
+       2 <html>
+       3 <head>
+       4   <base href="$FLUTTER_BASE_HREF">
+       5   <meta charset="UTF-8">
+       6   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+       7   <meta name="description" content="Sistema de triaje hospitalar
+         io">
+       8   <meta name="apple-mobile-web-app-capable" content="yes">
+       9   <meta name="apple-mobile-web-app-status-bar-style" content="bl
+         ack">
+      10   <meta name="apple-mobile-web-app-title" content="HospitalTriaj
+         e">
+     … +12 lines (ctrl+o to expand)
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/frontend/web/manifest.json)
+  ⎿  Wrote 23 lines to ..\..\..\..\..\..\c\Users\marco\Dev\Projects\Hospita
+     lTriaje\frontend\web\manifest.json
+       1 {
+       2     "name": "HospitalTriaje",
+       3     "short_name": "Triaje",
+       4     "start_url": ".",
+       5     "display": "standalone",
+       6     "background_color": "#FFFFFF",
+       7     "theme_color": "#1565C0",
+       8     "description": "Sistema de triaje hospitalario",
+       9     "orientation": "portrait-primary",
+      10     "prefer_related_applications": false,
+     … +13 lines (ctrl+o to expand)
+
+● Now let me add the .gitignore and a final verification of the structure:
+
+● Write(/c/Users/marco/Dev/Projects/HospitalTriaje/.gitignore)
+  ⎿  Wrote 41 lines to
+     ..\..\..\..\..\..\c\Users\marco\Dev\Projects\HospitalTriaje\.gitignore
+       1 # Python
+       2 __pycache__/
+       3 *.py[cod]
+       4 *.pyo
+       5 .venv/
+       6 venv/
+       7 *.egg-info/
+       8 dist/
+       9 build/
+      10 .env
+     … +31 lines (ctrl+o to expand)
+
+● Searched for 2 patterns (ctrl+o to expand)
+
+● Everything is in place. Now save project knowledge to memory and mark all
+  tasks complete:
+
+● Write(/c/Users/marco/.claude/projects/C--Users-marco-Dev-Projects-HospitalTria
+       je/memory/MEMORY.md)
+  ⎿  Wrote 45 lines to ..\..\..\..\..\..\c\Users\marco\.claude\projects\C--
+     Users-marco-Dev-Projects-HospitalTriaje\memory\MEMORY.md
+       1 # HospitalTriaje — Project Memory
+       2 
+       3 ## Project Overview
+       4 Cross-platform triage app (Flutter + FastAPI + PostgreSQL) using
+          Manchester Triage System (MTS).
+       5 
+       6 ## Key Architecture
+       7 - Backend: Python 3.12 + FastAPI async, `backend/app/`
+       8 - Frontend: Flutter, `frontend/lib/`
+       9 - DB: PostgreSQL via SQLAlchemy async + Alembic migrations
+      10 - SSE: in-memory pub/sub via `sse_manager.py`, no Redis needed
+     … +35 lines (ctrl+o to expand)
+
+● All 10 phases are implemented. Here's a summary of what was built:
+
+  ---
+  What was implemented
+
+  Backend (backend/)
+
+  File: app/main.py
+  Purpose: FastAPI app factory with CORS + lifespan
+  ────────────────────────────────────────
+  File: app/config.py
+  Purpose: pydantic-settings with all env vars
+  ────────────────────────────────────────
+  File: app/database.py
+  Purpose: Async SQLAlchemy engine + get_db()
+  ────────────────────────────────────────
+  File: app/models/
+  Purpose: 7 ORM models: patients, hospitals, specialties, hospital_specialty,
+    hospital_status, triage_sessions, referrals
+  ────────────────────────────────────────
+  File: app/routers/auth.py
+  Purpose: POST /auth/register · login · google
+  ────────────────────────────────────────
+  File: app/routers/triage.py
+  Purpose: GET /triage/questions · POST /triage/evaluate
+  ────────────────────────────────────────
+  File: app/routers/hospitals.py
+  Purpose: Nearby, detail, status update, specialist override, referrals
+  ────────────────────────────────────────
+  File: app/routers/stream.py
+  Purpose: SSE endpoint with per-IP connection limiting
+  ────────────────────────────────────────
+  File: app/services/triage_engine.py
+  Purpose: MTS tree traversal
+  ────────────────────────────────────────
+  File: app/services/hospital_routing.py
+  Purpose: Haversine + scoring algorithm
+  ────────────────────────────────────────
+  File: app/services/sse_manager.py
+  Purpose: asyncio Queue pub/sub
+  ────────────────────────────────────────
+  File: app/services/notification.py
+  Purpose: Firebase Admin FCM (graceful no-op in dev)
+  ────────────────────────────────────────
+  File: app/middleware/hospital_token.py
+  Purpose: bcrypt X-API-Token verification
+  ────────────────────────────────────────
+  File: app/seed/
+  Purpose: question_tree.json (Spanish MTS tree), hospitals.json (5 CDMX
+    hospitals), specialists.json, run_seed.py
+  ────────────────────────────────────────
+  File: alembic/versions/0001_initial_schema.py
+  Purpose: Full DB migration
+  ────────────────────────────────────────
+  File: tests/
+  Purpose: pytest: health, auth, triage engine, triage API, routing score
+
+  Frontend (frontend/)
+
+  File: lib/main.dart
+  Purpose: App entry, Hive init, Firebase init
+  ────────────────────────────────────────
+  File: lib/core/theme/
+  Purpose: MTS colour palette (red/orange/yellow/green/blue)
+  ────────────────────────────────────────
+  File: lib/core/router/
+  Purpose: go_router with shell route + bottom nav
+  ────────────────────────────────────────
+  File: lib/core/network/
+  Purpose: Dio + JWT interceptor
+  ────────────────────────────────────────
+  File: lib/features/triage/
+  Purpose: Branching question UI + offline Hive cache
+  ────────────────────────────────────────
+  File: lib/features/emergency/
+  Purpose: Tips per category (7 categories, 100+ tips)
+  ────────────────────────────────────────
+  File: lib/features/hospitals/
+  Purpose: SSE-live list, detail, model
+  ────────────────────────────────────────
+  File: lib/features/map/
+  Purpose: Google Maps with markers + bottom sheet
+  ────────────────────────────────────────
+  File: lib/features/auth/
+  Purpose: Email/password + Google Sign-In + Riverpod
+  ────────────────────────────────────────
+  File: lib/features/notifications/
+  Purpose: FCM stub (ready for Firebase config)
+  ────────────────────────────────────────
+  File: lib/l10n/es.arb
+  Purpose: Full Spanish ARB strings
+  ────────────────────────────────────────
+  File: test/triage_engine_test.dart
+  Purpose: Routing score unit tests
+
+  Infrastructure
+
+  - docker-compose.yml — postgres + backend + pgadmin with health checks
+  - frontend/Dockerfile — Flutter web build → nginx
+  - frontend/nginx.conf — SPA routing + API proxy + SSE buffering disabled
+  - .env.example — all required variables documented
+  - README.md — quickstart, API reference, MTS level table
+
+  First run
+
+  cp .env.example .env
+  docker-compose up --build
+  curl http://localhost:8000/health   # → {"status": "ok"}
+
+✻ Churned for 16m 20s
+
+❯ run the backend tests 
+
+● Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/backend && python --version
+       2>&1 && pip --version 2>&1)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: python: command not found
+
+     /usr/bin/bash: line 1: python: command not found
+
+● Bash(python3 --version 2>&1 && pip3 --version 2>&1)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: python3: command not found
+
+     /usr/bin/bash: line 1: python3: command not found
+
+● Searched for 1 pattern (ctrl+o to expand)
+
+● Bash(ls "/c/Users/marco/AppData/Local/Programs/" 2>/dev/null; ls "/c/Program
+      Files/Python"* 2>/dev/null; ls "/c/Program Files (x86)/Python"*
+      2>/dev/null; cmd //c "wh…)
+  ⎿  Microsoft VS Code
+
+● Bash(cmd //c "where python 2>nul && where python3 2>nul && where py 2>nul"
+      2>/dev/null; cmd //c "py --version" 2>/dev/null || true)
+  ⎿  (No output)
+
+● Bash(cmd //c "py -3 --version" 2>&1; cmd //c "python --version" 2>&1;
+      powershell -Command "Get-Command python,python3,py -ErrorAction
+      SilentlyContinue | Select-Objec…)
+  ⎿  'py' is not recognized as an internal or external command,
+     operable program or batch file.
+     'python' is not recognized as an internal or external command,
+     operable program or batch file.
+
+● Searched for 1 pattern (ctrl+o to expand)
+
+● Task Output b4bb50f
+  ⎿  /c/Users/marco/AppData/Local/Microsoft/WindowsApps/Microsoft.DesktopAp
+     pInstaller_8wekyb3d8bbwe/python.exe
+     /c/Users/marco/AppData/Local/Microsoft/WindowsApps/python.exe
+     … +3 lines (ctrl+o to expand)
+
+● Those are Microsoft Store stubs (not real Python). Let me check for conda, uv,
+   or any other Python environment:
+
+● Searched for 3 patterns (ctrl+o to expand)
+
+● Task Output b5c29c3
+  ⎿  (No output)
+
+● No Python installation found on the system. Let me check if Docker is
+  available, since that's how the project is designed to run:
+
+● Bash(docker --version 2>&1; docker info --format '{{.ServerVersion}}' 2>&1 |
+      head -3)
+  ⎿  Interrupted · What should Claude do instead?
+
+● Background command "Search entire user directories for python.exe" completed
+(exit code 0)
+
+● Read 1 file (ctrl+o to expand)
+
+● Background command "Search all drives for real Python executable" completed
+(exit code 0)
+  ⎿  Interrupted · What should Claude do instead?
+
+● Read 1 file (ctrl+o to expand)

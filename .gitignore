@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.env
+*.env
+
+# Firebase credentials (NEVER commit)
+firebase-credentials.json
+
+# Flutter
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
+frontend/.pub-cache/
+frontend/.pub/
+frontend/build/
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/app/google-services.json
+frontend/ios/Flutter/flutter_export_environment.sh
+frontend/ios/Runner/GoogleService-Info.plist
+frontend/*.iml
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# Docker
+*.override.yml
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,77 @@
+[
+  {
+    "hospital_id": 1,
+    "specialty_slug": "cardiologia",
+    "schedule": {"mon": ["08:00-20:00"], "tue": ["08:00-20:00"], "wed": ["08:00-20:00"], "thu": ["08:00-20:00"], "fri": ["08:00-17:00"]}
+  },
+  {
+    "hospital_id": 1,
+    "specialty_slug": "urgencias",
+    "schedule": {"mon": ["00:00-23:59"], "tue": ["00:00-23:59"], "wed": ["00:00-23:59"], "thu": ["00:00-23:59"], "fri": ["00:00-23:59"], "sat": ["00:00-23:59"], "sun": ["00:00-23:59"]}
+  },
+  {
+    "hospital_id": 1,
+    "specialty_slug": "neurologia",
+    "schedule": {"mon": ["09:00-18:00"], "tue": ["09:00-18:00"], "wed": ["09:00-18:00"], "thu": ["09:00-18:00"], "fri": ["09:00-14:00"]}
+  },
+  {
+    "hospital_id": 2,
+    "specialty_slug": "urgencias",
+    "schedule": {"mon": ["00:00-23:59"], "tue": ["00:00-23:59"], "wed": ["00:00-23:59"], "thu": ["00:00-23:59"], "fri": ["00:00-23:59"], "sat": ["00:00-23:59"], "sun": ["00:00-23:59"]}
+  },
+  {
+    "hospital_id": 2,
+    "specialty_slug": "traumatologia",
+    "schedule": {"mon": ["08:00-20:00"], "tue": ["08:00-20:00"], "wed": ["08:00-20:00"], "thu": ["08:00-20:00"], "fri": ["08:00-17:00"], "sat": ["09:00-14:00"]}
+  },
+  {
+    "hospital_id": 2,
+    "specialty_slug": "pediatria",
+    "schedule": {"mon": ["08:00-20:00"], "tue": ["08:00-20:00"], "wed": ["08:00-20:00"], "thu": ["08:00-20:00"], "fri": ["08:00-17:00"]}
+  },
+  {
+    "hospital_id": 3,
+    "specialty_slug": "urgencias",
+    "schedule": {"mon": ["00:00-23:59"], "tue": ["00:00-23:59"], "wed": ["00:00-23:59"], "thu": ["00:00-23:59"], "fri": ["00:00-23:59"], "sat": ["00:00-23:59"], "sun": ["00:00-23:59"]}
+  },
+  {
+    "hospital_id": 3,
+    "specialty_slug": "cardiologia",
+    "schedule": {"mon": ["08:00-18:00"], "tue": ["08:00-18:00"], "wed": ["08:00-18:00"], "thu": ["08:00-18:00"], "fri": ["08:00-14:00"]}
+  },
+  {
+    "hospital_id": 3,
+    "specialty_slug": "ginecologia",
+    "schedule": {"mon": ["08:00-20:00"], "tue": ["08:00-20:00"], "wed": ["08:00-20:00"], "thu": ["08:00-20:00"], "fri": ["08:00-17:00"]}
+  },
+  {
+    "hospital_id": 4,
+    "specialty_slug": "urgencias",
+    "schedule": {"mon": ["00:00-23:59"], "tue": ["00:00-23:59"], "wed": ["00:00-23:59"], "thu": ["00:00-23:59"], "fri": ["00:00-23:59"], "sat": ["00:00-23:59"], "sun": ["00:00-23:59"]}
+  },
+  {
+    "hospital_id": 4,
+    "specialty_slug": "cirugia-general",
+    "schedule": {"mon": ["07:00-19:00"], "tue": ["07:00-19:00"], "wed": ["07:00-19:00"], "thu": ["07:00-19:00"], "fri": ["07:00-17:00"]}
+  },
+  {
+    "hospital_id": 4,
+    "specialty_slug": "neurologia",
+    "schedule": {"mon": ["09:00-17:00"], "tue": ["09:00-17:00"], "wed": ["09:00-17:00"], "thu": ["09:00-17:00"]}
+  },
+  {
+    "hospital_id": 5,
+    "specialty_slug": "urgencias",
+    "schedule": {"mon": ["00:00-23:59"], "tue": ["00:00-23:59"], "wed": ["00:00-23:59"], "thu": ["00:00-23:59"], "fri": ["00:00-23:59"], "sat": ["00:00-23:59"], "sun": ["00:00-23:59"]}
+  },
+  {
+    "hospital_id": 5,
+    "specialty_slug": "cardiologia",
+    "schedule": {"mon": ["08:00-20:00"], "tue": ["08:00-20:00"], "wed": ["08:00-20:00"], "thu": ["08:00-20:00"], "fri": ["08:00-18:00"], "sat": ["09:00-14:00"]}
+  },
+  {
+    "hospital_id": 5,
+    "specialty_slug": "medicina-interna",
+    "schedule": {"mon": ["08:00-18:00"], "tue": ["08:00-18:00"], "wed": ["08:00-18:00"], "thu": ["08:00-18:00"], "fri": ["08:00-14:00"]}
+  }
+]

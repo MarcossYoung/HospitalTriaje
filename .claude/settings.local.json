@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd //c \"where python 2>nul && where python3 2>nul && where py 2>nul\")",
+      "Bash(cmd //c \"py --version\")",
+      "Bash(cmd //c \"py -3 --version\")",
+      "Bash(cmd //c \"python --version\")",
+      "Bash(powershell -Command \"Get-Command python,python3,py -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(ls:*)",
+      "Bash(docker info:*)",
+      "Bash(flutter --version:*)",
+      "Bash(where:*)",
+      "Bash(cmd.exe /c \"docker --version\")",
+      "Bash(cmd.exe /c \"where docker\")",
+      "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/backend && python -m pytest -v 2>&1)",
+      "Bash(docker:*)",
+      "Bash(MSYS_NO_PATHCONV=1 docker run:*)",
+      "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && powershell -Command \"\n\\\\$cssResponse = Invoke-WebRequest -Uri 'https://fonts.googleapis.com/css2?family=Inter:wght@400' -Headers @{'User-Agent'='Mozilla/4.0'}\n\\\\$cssResponse.Content\n\" 2>&1)",
+      "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && powershell -Command \"\nInvoke-WebRequest -Uri 'https://github.com/rsms/inter/releases/download/v4.0/Inter-4.0.zip' -OutFile '\\\\$env:TEMP\\\\inter.zip'\nExpand-Archive -Path '\\\\$env:TEMP\\\\inter.zip' -DestinationPath '\\\\$env:TEMP\\\\inter' -Force\nGet-ChildItem '\\\\$env:TEMP\\\\inter' -Recurse -Filter '*Regular*'\n\" 2>&1)",
+      "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && powershell -Command \"Invoke-WebRequest -Uri 'https://github.com/rsms/inter/releases/download/v4.0/Inter-4.0.zip' -OutFile 'C:\\\\\\\\Temp\\\\\\\\inter.zip'; Expand-Archive -Path 'C:\\\\\\\\Temp\\\\\\\\inter.zip' -DestinationPath 'C:\\\\\\\\Temp\\\\\\\\inter' -Force; Get-ChildItem 'C:\\\\\\\\Temp\\\\\\\\inter' -Recurse -Filter '*Regular*'\" 2>&1)",
+      "Bash(powershell:*)",
+      "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && flutter clean 2>&1)",
+      "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && /c/Users/marco/Dev/FrameWorks/flutter/bin/flutter clean 2>&1)"
+    ]
+  }
+}

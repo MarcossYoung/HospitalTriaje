@@ -1,0 +1,12 @@
+[
+  {"id": 1, "name_es": "Cardiología", "slug": "cardiologia"},
+  {"id": 2, "name_es": "Neurología", "slug": "neurologia"},
+  {"id": 3, "name_es": "Traumatología y Ortopedia", "slug": "traumatologia"},
+  {"id": 4, "name_es": "Pediatría", "slug": "pediatria"},
+  {"id": 5, "name_es": "Ginecología y Obstetricia", "slug": "ginecologia"},
+  {"id": 6, "name_es": "Urgencias Generales", "slug": "urgencias"},
+  {"id": 7, "name_es": "Medicina Interna", "slug": "medicina-interna"},
+  {"id": 8, "name_es": "Cirugía General", "slug": "cirugia-general"},
+  {"id": 9, "name_es": "Neumología", "slug": "neumologia"},
+  {"id": 10, "name_es": "Psiquiatría", "slug": "psiquiatria"}
+]

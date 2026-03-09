@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "email": "maria.garcia@test.com",
+    "password": "TestPass123!",
+    "profile": {
+      "nombre": "María García",
+      "edad": 45,
+      "sexo": "F",
+      "alergias": ["penicilina"],
+      "condiciones": ["hipertensión arterial"]
+    }
+  },
+  {
+    "id": 2,
+    "email": "juan.lopez@test.com",
+    "password": "TestPass123!",
+    "profile": {
+      "nombre": "Juan López",
+      "edad": 32,
+      "sexo": "M",
+      "alergias": [],
+      "condiciones": []
+    }
+  },
+  {
+    "id": 3,
+    "email": "ana.martinez@test.com",
+    "password": "TestPass123!",
+    "profile": {
+      "nombre": "Ana Martínez",
+      "edad": 68,
+      "sexo": "F",
+      "alergias": ["aspirina"],
+      "condiciones": ["diabetes tipo 2", "cardiopatía isquémica"]
+    }
+  },
+  {
+    "id": 4,
+    "email": "carlos.rodriguez@test.com",
+    "password": "TestPass123!",
+    "profile": {
+      "nombre": "Carlos Rodríguez",
+      "edad": 8,
+      "sexo": "M",
+      "alergias": [],
+      "condiciones": []
+    }
+  },
+  {
+    "id": 5,
+    "email": "sofia.torres@test.com",
+    "password": "TestPass123!",
+    "profile": {
+      "nombre": "Sofía Torres",
+      "edad": 27,
+      "sexo": "F",
+      "alergias": [],
+      "condiciones": []
+    }
+  }
+]

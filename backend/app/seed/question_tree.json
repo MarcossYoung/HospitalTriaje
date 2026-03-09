@@ -1,0 +1,227 @@
+{
+  "root": "start",
+  "nodes": {
+    "start": {
+      "question_es": "¿Cuál es el motivo principal de su consulta?",
+      "options": [
+        {"label_es": "Dolor en el pecho o dificultad para respirar", "next_node_id": "chest_pain_initial"},
+        {"label_es": "Pérdida de conciencia, convulsiones o dificultad para hablar", "next_node_id": "neuro_initial"},
+        {"label_es": "Sangrado activo o herida grave", "next_node_id": "bleeding_initial"},
+        {"label_es": "Dolor abdominal o náuseas intensas", "next_node_id": "abdominal_initial"},
+        {"label_es": "Fiebre, malestar general o síntomas leves", "next_node_id": "general_initial"}
+      ]
+    },
+
+    "chest_pain_initial": {
+      "question_es": "¿Está experimentando el dolor en este momento?",
+      "options": [
+        {"label_es": "Sí, el dolor es intenso (mayor a 7/10)", "next_node_id": "chest_severe"},
+        {"label_es": "Sí, el dolor es moderado (4-7/10)", "next_node_id": "chest_moderate"},
+        {"label_es": "No, el dolor ya pasó o es leve", "next_node_id": "chest_mild"}
+      ]
+    },
+    "chest_severe": {
+      "question_es": "¿Tiene alguno de estos síntomas adicionales?",
+      "options": [
+        {"label_es": "Sudoración fría, dolor en brazo izquierdo o mandíbula", "next_node_id": "level1_cardiac"},
+        {"label_es": "Dificultad severa para respirar, labios azules", "next_node_id": "level1_respiratory"},
+        {"label_es": "Solo el dolor en el pecho", "next_node_id": "level2_chest"}
+      ]
+    },
+    "chest_moderate": {
+      "question_es": "¿Tiene alguno de estos factores de riesgo?",
+      "options": [
+        {"label_es": "Antecedente de enfermedad del corazón o infarto previo", "next_node_id": "level2_chest"},
+        {"label_es": "Ningún antecedente cardíaco conocido", "next_node_id": "level3_chest"}
+      ]
+    },
+    "chest_mild": {
+      "question_es": "¿Cuánto tiempo lleva con molestia en el pecho?",
+      "options": [
+        {"label_es": "Más de 24 horas", "next_node_id": "level3_chest"},
+        {"label_es": "Menos de 24 horas o es intermitente", "next_node_id": "level4_chest"}
+      ]
+    },
+
+    "neuro_initial": {
+      "question_es": "¿Cuál es el estado actual del paciente?",
+      "options": [
+        {"label_es": "Está inconsciente o no responde", "next_node_id": "level1_neuro"},
+        {"label_es": "Tiene convulsiones activas en este momento", "next_node_id": "level1_neuro"},
+        {"label_es": "Dificultad para hablar, cara caída o debilidad de un lado", "next_node_id": "level2_neuro"},
+        {"label_es": "Dolor de cabeza muy intenso (el peor de su vida)", "next_node_id": "level2_neuro"},
+        {"label_es": "Mareo fuerte, confusión leve o cefalea moderada", "next_node_id": "level3_neuro"}
+      ]
+    },
+
+    "bleeding_initial": {
+      "question_es": "¿Puede controlar el sangrado con presión directa?",
+      "options": [
+        {"label_es": "No, el sangrado es abundante y no se detiene", "next_node_id": "level1_bleeding"},
+        {"label_es": "El sangrado se ha reducido pero sigue activo", "next_node_id": "level2_bleeding"},
+        {"label_es": "Sí, el sangrado está controlado o es pequeño", "next_node_id": "bleeding_wound"}
+      ]
+    },
+    "bleeding_wound": {
+      "question_es": "¿Cómo es la herida?",
+      "options": [
+        {"label_es": "Herida profunda que podría necesitar puntos", "next_node_id": "level3_bleeding"},
+        {"label_es": "Cortada superficial o moretón", "next_node_id": "level4_trauma"}
+      ]
+    },
+
+    "abdominal_initial": {
+      "question_es": "¿Cómo describiría el dolor abdominal?",
+      "options": [
+        {"label_es": "Muy intenso, abdomen rígido o no puedo moverme del dolor", "next_node_id": "level2_abdominal"},
+        {"label_es": "Moderado, con náuseas o vómito", "next_node_id": "abdomen_vomit"},
+        {"label_es": "Leve o intermitente", "next_node_id": "level4_abdominal"}
+      ]
+    },
+    "abdomen_vomit": {
+      "question_es": "¿Ha vomitado sangre o tiene heces negras?",
+      "options": [
+        {"label_es": "Sí", "next_node_id": "level2_abdominal"},
+        {"label_es": "No", "next_node_id": "level3_abdominal"}
+      ]
+    },
+
+    "general_initial": {
+      "question_es": "¿Tiene fiebre en este momento?",
+      "options": [
+        {"label_es": "Sí, mayor a 39°C o con escalofríos severos", "next_node_id": "fever_high"},
+        {"label_es": "Sí, entre 37.5°C y 39°C", "next_node_id": "fever_moderate"},
+        {"label_es": "No tengo fiebre", "next_node_id": "general_symptoms"}
+      ]
+    },
+    "fever_high": {
+      "question_es": "¿Tiene alguno de estos síntomas además de la fiebre?",
+      "options": [
+        {"label_es": "Rigidez en cuello, sensibilidad a la luz o confusión", "next_node_id": "level2_infection"},
+        {"label_es": "Dificultad para respirar o dolor en el pecho", "next_node_id": "level2_infection"},
+        {"label_es": "Solo fiebre alta sin otros síntomas graves", "next_node_id": "level3_fever"}
+      ]
+    },
+    "fever_moderate": {
+      "question_es": "¿Hace cuánto tiene la fiebre?",
+      "options": [
+        {"label_es": "Más de 3 días", "next_node_id": "level3_fever"},
+        {"label_es": "Menos de 3 días", "next_node_id": "level4_fever"}
+      ]
+    },
+    "general_symptoms": {
+      "question_es": "¿Cuál es su principal síntoma?",
+      "options": [
+        {"label_es": "Malestar general, fatiga o dolor muscular", "next_node_id": "level4_general"},
+        {"label_es": "Tos, dolor de garganta o congestión nasal", "next_node_id": "level5_respiratory"},
+        {"label_es": "Otros síntomas leves", "next_node_id": "level5_general"}
+      ]
+    },
+
+    "level1_cardiac": {
+      "triage_level": 1,
+      "complaint_category": "cardiaco",
+      "max_wait_minutes": 0
+    },
+    "level1_respiratory": {
+      "triage_level": 1,
+      "complaint_category": "respiratorio",
+      "max_wait_minutes": 0
+    },
+    "level1_neuro": {
+      "triage_level": 1,
+      "complaint_category": "neurologico",
+      "max_wait_minutes": 0
+    },
+    "level1_bleeding": {
+      "triage_level": 1,
+      "complaint_category": "trauma",
+      "max_wait_minutes": 0
+    },
+    "level2_chest": {
+      "triage_level": 2,
+      "complaint_category": "cardiaco",
+      "max_wait_minutes": 10
+    },
+    "level2_neuro": {
+      "triage_level": 2,
+      "complaint_category": "neurologico",
+      "max_wait_minutes": 10
+    },
+    "level2_bleeding": {
+      "triage_level": 2,
+      "complaint_category": "trauma",
+      "max_wait_minutes": 10
+    },
+    "level2_abdominal": {
+      "triage_level": 2,
+      "complaint_category": "abdominal",
+      "max_wait_minutes": 10
+    },
+    "level2_infection": {
+      "triage_level": 2,
+      "complaint_category": "infeccioso",
+      "max_wait_minutes": 10
+    },
+    "level3_chest": {
+      "triage_level": 3,
+      "complaint_category": "cardiaco",
+      "max_wait_minutes": 60
+    },
+    "level3_neuro": {
+      "triage_level": 3,
+      "complaint_category": "neurologico",
+      "max_wait_minutes": 60
+    },
+    "level3_bleeding": {
+      "triage_level": 3,
+      "complaint_category": "trauma",
+      "max_wait_minutes": 60
+    },
+    "level3_abdominal": {
+      "triage_level": 3,
+      "complaint_category": "abdominal",
+      "max_wait_minutes": 60
+    },
+    "level3_fever": {
+      "triage_level": 3,
+      "complaint_category": "infeccioso",
+      "max_wait_minutes": 60
+    },
+    "level4_chest": {
+      "triage_level": 4,
+      "complaint_category": "cardiaco",
+      "max_wait_minutes": 120
+    },
+    "level4_trauma": {
+      "triage_level": 4,
+      "complaint_category": "trauma",
+      "max_wait_minutes": 120
+    },
+    "level4_abdominal": {
+      "triage_level": 4,
+      "complaint_category": "abdominal",
+      "max_wait_minutes": 120
+    },
+    "level4_fever": {
+      "triage_level": 4,
+      "complaint_category": "infeccioso",
+      "max_wait_minutes": 120
+    },
+    "level4_general": {
+      "triage_level": 4,
+      "complaint_category": "general",
+      "max_wait_minutes": 120
+    },
+    "level5_respiratory": {
+      "triage_level": 5,
+      "complaint_category": "respiratorio",
+      "max_wait_minutes": 240
+    },
+    "level5_general": {
+      "triage_level": 5,
+      "complaint_category": "general",
+      "max_wait_minutes": 240
+    }
+  }
+}
