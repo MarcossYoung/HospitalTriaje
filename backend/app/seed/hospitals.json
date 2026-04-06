@@ -1,47 +1,47 @@
 [
   {
     "id": 1,
-    "name": "Hospital General de México",
-    "address": "Dr. Balmis 148, Doctores, 06726 Ciudad de México, CDMX",
-    "lat": 19.4151,
-    "lng": -99.1505,
-    "phone": "+52 55 2789 2000",
+    "name": "Hospital Italiano de Buenos Aires",
+    "address": "Gascon 450, Almagro, C1181ACH Buenos Aires",
+    "lat": -34.6037,
+    "lng": -58.4229,
+    "phone": "+54 11 4959-0200",
     "api_token": "token-hospital-1-change-in-prod"
   },
   {
     "id": 2,
-    "name": "Hospital Juárez de México",
-    "address": "Av. Instituto Politécnico Nacional 5160, Magdalena de las Salinas, 07760 Ciudad de México, CDMX",
-    "lat": 19.4876,
-    "lng": -99.1276,
-    "phone": "+52 55 5747 7560",
+    "name": "Hospital Británico de Buenos Aires",
+    "address": "Perdriel 74, San Telmo, C1280AEB Buenos Aires",
+    "lat": -34.6324,
+    "lng": -58.3826,
+    "phone": "+54 11 4309-6400",
     "api_token": "token-hospital-2-change-in-prod"
   },
   {
     "id": 3,
-    "name": "Hospital Español de México",
-    "address": "Ejercito Nacional 613, Granada, 11520 Ciudad de México, CDMX",
-    "lat": 19.4327,
-    "lng": -99.1751,
-    "phone": "+52 55 5255 9600",
+    "name": "Hospital Alemán",
+    "address": "Av. Pueyrredón 1640, Recoleta, C1118AAT Buenos Aires",
+    "lat": -34.5926,
+    "lng": -58.4013,
+    "phone": "+54 11 4827-7000",
     "api_token": "token-hospital-3-change-in-prod"
   },
   {
     "id": 4,
-    "name": "Centro Médico ABC",
-    "address": "Sur 136 No. 116, Las Américas, 01120 Ciudad de México, CDMX",
-    "lat": 19.3693,
-    "lng": -99.1977,
-    "phone": "+52 55 5230 8000",
+    "name": "Hospital de Clínicas José de San Martín",
+    "address": "Av. Córdoba 2351, Balvanera, C1120AAR Buenos Aires",
+    "lat": -34.5985,
+    "lng": -58.4001,
+    "phone": "+54 11 5950-8000",
     "api_token": "token-hospital-4-change-in-prod"
   },
   {
     "id": 5,
-    "name": "Hospital Ángeles Lomas",
-    "address": "Vialidad de la Barranca S/N, Hacienda de las Palmas, 52763 Huixquilucan, Méx.",
-    "lat": 19.3927,
-    "lng": -99.2819,
-    "phone": "+52 55 5246 5000",
+    "name": "Hospital El Cruce",
+    "address": "Av. Calchaquí 5401, Florencio Varela, B1888 Buenos Aires",
+    "lat": -34.8087,
+    "lng": -58.2806,
+    "phone": "+54 11 4275-6100",
     "api_token": "token-hospital-5-change-in-prod"
   }
 ]

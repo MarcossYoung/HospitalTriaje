@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'core/constants/app_constants.dart';
+import 'core/network/api_client.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/notifications/fcm_service.dart';
@@ -16,6 +17,9 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox<String>(AppConstants.triageBox);
   await Hive.openBox<String>(AppConstants.settingsBox);
+
+  // Warm JWT cache once so interceptor never hits Keystore per-request.
+  await preloadToken();
 
   // Firebase / FCM (graceful fallback if not configured)
   await FcmService.initialize();

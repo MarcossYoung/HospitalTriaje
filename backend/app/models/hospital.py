@@ -1,4 +1,4 @@
-from sqlalchemy import Float, String, Text
+from sqlalchemy import Boolean, Float, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -14,6 +14,7 @@ class Hospital(Base):
     lng: Mapped[float] = mapped_column(Float, nullable=False)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     api_token_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
 
     status: Mapped["HospitalStatus | None"] = relationship(  # noqa: F821
         "HospitalStatus", back_populates="hospital", uselist=False, lazy="selectin"
@@ -23,4 +24,10 @@ class Hospital(Base):
     )
     referrals: Mapped[list["Referral"]] = relationship(  # noqa: F821
         "Referral", back_populates="hospital", lazy="selectin"
+    )
+    on_call_doctors: Mapped[list["OnCallDoctor"]] = relationship(  # noqa: F821
+        "OnCallDoctor", back_populates="hospital", lazy="selectin"
+    )
+    obras_sociales: Mapped[list["HospitalObraSocial"]] = relationship(  # noqa: F821
+        "HospitalObraSocial", lazy="selectin"
     )

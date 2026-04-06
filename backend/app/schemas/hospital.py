@@ -3,6 +3,42 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class OnCallDoctorCreate(BaseModel):
+    doctor_name: str
+    specialty_id: int | None = None
+    shift_start: datetime
+    shift_end: datetime
+
+
+class OnCallDoctorOut(BaseModel):
+    id: int
+    hospital_id: int
+    doctor_name: str
+    specialty_id: int | None
+    specialty_name: str | None
+    shift_start: datetime
+    shift_end: datetime
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ObraSocialOut(BaseModel):
+    id: int
+    name: str
+    code: str
+
+    model_config = {"from_attributes": True}
+
+
+class HospitalObrasSocialesUpdate(BaseModel):
+    obra_social_ids: list[int]
+
+
+class BedsUpdate(BaseModel):
+    available_beds: int
+
+
 class HospitalStatusUpdate(BaseModel):
     wait_time_min: int
     available_beds: int
@@ -46,6 +82,19 @@ class HospitalOut(BaseModel):
 class NearbyHospitalOut(HospitalOut):
     distance_km: float
     score: float
+
+
+class HospitalInfoUpdate(BaseModel):
+    address: str | None = None
+    phone: str | None = None
+
+
+class SpecialtyScheduleUpdate(BaseModel):
+    schedule: dict[str, list[str]]  # {"mon": ["08:00-20:00"], ...}
+
+
+class TokenRotateOut(BaseModel):
+    token: str  # plaintext — shown once, never stored
 
 
 class ReferralCreate(BaseModel):

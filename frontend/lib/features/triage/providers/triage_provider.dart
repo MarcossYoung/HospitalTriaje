@@ -7,6 +7,13 @@ import 'package:hive/hive.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_client.dart';
 
+/// Sentinel to distinguish "not passed" from explicit null in copyWith.
+class _Sentinel {
+  const _Sentinel();
+}
+
+const _sentinel = _Sentinel();
+
 class TriageState {
   final Map<String, dynamic>? tree;
   final List<Map<String, dynamic>> answers;
@@ -29,8 +36,8 @@ class TriageState {
   TriageState copyWith({
     Map<String, dynamic>? tree,
     List<Map<String, dynamic>>? answers,
-    String? currentNodeId,
-    Map<String, dynamic>? result,
+    Object? currentNodeId = _sentinel,
+    Object? result = _sentinel,
     bool? loading,
     bool? offline,
     String? error,
@@ -38,8 +45,12 @@ class TriageState {
       TriageState(
         tree: tree ?? this.tree,
         answers: answers ?? this.answers,
-        currentNodeId: currentNodeId ?? this.currentNodeId,
-        result: result ?? this.result,
+        currentNodeId: currentNodeId == _sentinel
+            ? this.currentNodeId
+            : currentNodeId as String?,
+        result: result == _sentinel
+            ? this.result
+            : result as Map<String, dynamic>?,
         loading: loading ?? this.loading,
         offline: offline ?? this.offline,
         error: error,
@@ -59,6 +70,7 @@ class TriageNotifier extends StateNotifier<TriageState> {
   final Dio _dio;
 
   Future<void> loadTree() async {
+    if (state.tree != null && !state.offline) return;
     state = state.copyWith(loading: true, error: null);
     try {
       final resp = await _dio.get('/triage/questions');
@@ -119,6 +131,13 @@ class TriageNotifier extends StateNotifier<TriageState> {
       state = state.copyWith(loading: false, error: 'Error al evaluar');
       return null;
     }
+  }
+
+  void goBack() {
+    if (state.answers.isEmpty || state.tree == null) return;
+    final prevNodeId = state.answers.last['node_id'] as String;
+    final newAnswers = state.answers.sublist(0, state.answers.length - 1);
+    state = state.copyWith(answers: newAnswers, currentNodeId: prevNodeId, error: null);
   }
 
   void reset() {

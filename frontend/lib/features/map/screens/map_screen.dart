@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,16 +18,17 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   GoogleMapController? _mapController;
-  LatLng _userLocation = const LatLng(19.4326, -99.1332);
+  LatLng _userLocation = const LatLng(-34.6037, -58.3816);
   Set<Marker> _markers = {};
   HospitalModel? _selectedHospital;
+  ProviderSubscription? _sseSub;
 
   @override
   void initState() {
     super.initState();
     _loadLocation();
     // Listen to SSE for live updates
-    ref.listenManual(sseProvider, (_, event) {
+    _sseSub = ref.listenManual(sseProvider, (_, event) {
       event.whenData((data) {
         ref.read(hospitalsProvider.notifier).applySSEUpdate(data);
         _updateMarkers(ref.read(hospitalsProvider).hospitals);
@@ -34,12 +36,26 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _sseSub?.close();
+    _mapController?.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadLocation() async {
     try {
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
-      );
-      setState(() => _userLocation = LatLng(pos.latitude, pos.longitude));
+      if (!kIsWeb) {
+        final perm = await Geolocator.checkPermission();
+        if (perm == LocationPermission.denied) await Geolocator.requestPermission();
+      }
+      // getLastKnownPosition is unsupported on web — skip it there
+      final last = kIsWeb ? null : await Geolocator.getLastKnownPosition();
+      final pos = last ??
+          await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+          ).timeout(const Duration(seconds: 8), onTimeout: () => throw Exception('timeout'));
+      if (mounted) setState(() => _userLocation = LatLng(pos.latitude, pos.longitude));
       await ref.read(hospitalsProvider.notifier).loadNearby(
             lat: pos.latitude,
             lng: pos.longitude,
@@ -50,7 +66,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             lng: _userLocation.longitude,
           );
     }
-    _updateMarkers(ref.read(hospitalsProvider).hospitals);
+    if (mounted) _updateMarkers(ref.read(hospitalsProvider).hospitals);
   }
 
   void _updateMarkers(List<HospitalModel> hospitals) {

@@ -52,7 +52,10 @@ class TriageResultScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => context.push('/hospitals'),
+              onPressed: () => context.go(
+                '/hospitals',
+                extra: {'level': level, 'category': category},
+              ),
               icon: const Icon(Icons.local_hospital),
               label: const Text('Ver hospitales cercanos'),
             ),

@@ -3,30 +3,30 @@
     "hospital_id": 1,
     "wait_time_min": 45,
     "available_beds": 5,
-    "comment": "Hospital General — alta demanda, pocas camas disponibles"
+    "comment": "Hospital Italiano de Buenos Aires — alta demanda, pocas camas disponibles"
   },
   {
     "hospital_id": 2,
     "wait_time_min": 15,
     "available_beds": 18,
-    "comment": "Hospital Juárez — tiempo de espera bajo, buena disponibilidad"
+    "comment": "Hospital Británico de Buenos Aires — tiempo de espera bajo, buena disponibilidad"
   },
   {
     "hospital_id": 3,
     "wait_time_min": 60,
     "available_beds": 2,
-    "comment": "Hospital Español — saturado, mínima disponibilidad"
+    "comment": "Hospital Alemán — saturado, mínima disponibilidad"
   },
   {
     "hospital_id": 4,
     "wait_time_min": 20,
     "available_beds": 12,
-    "comment": "Centro Médico ABC — disponibilidad moderada"
+    "comment": "Hospital de Clínicas José de San Martín — disponibilidad moderada"
   },
   {
     "hospital_id": 5,
     "wait_time_min": 10,
     "available_beds": 25,
-    "comment": "Hospital Ángeles Lomas — excelente disponibilidad"
+    "comment": "Hospital El Cruce — excelente disponibilidad"
   }
 ]

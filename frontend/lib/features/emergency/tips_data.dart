@@ -116,6 +116,23 @@ const Map<String, EmergencyTips> kEmergencyTips = {
       'No retrase la atención médica si hay confusión o rigidez de cuello',
     ],
   ),
+  'cardiaco_no_urgente': EmergencyTips(
+    title: 'Malestar en el pecho',
+    callEmergency: false,
+    dos: [
+      'Diríjase a urgencias o a su médico de cabecera dentro de las próximas 2 horas',
+      'Descanse y evite el esfuerzo físico',
+      'Anote cuándo comenzó el malestar y qué lo mejora o empeora',
+      'Tome su medicación cardíaca habitual si le fue prescrita',
+      'Lleve una lista de sus medicamentos actuales a la consulta',
+    ],
+    donts: [
+      'No tome medicamentos no recetados sin consultar',
+      'No ignore el malestar si se intensifica o aparece dolor irradiado al brazo o mandíbula',
+      'No conduzca usted mismo si los síntomas empeoran',
+      'No realice esfuerzos físicos hasta ser evaluado',
+    ],
+  ),
   'general': EmergencyTips(
     title: 'Malestar general',
     callEmergency: false,
@@ -131,6 +148,9 @@ const Map<String, EmergencyTips> kEmergencyTips = {
   ),
 };
 
-EmergencyTips getTips(String category) {
+EmergencyTips getTips(String category, {int mtsLevel = 1}) {
+  if (category == 'cardiaco' && mtsLevel >= 3) {
+    return kEmergencyTips['cardiaco_no_urgente']!;
+  }
   return kEmergencyTips[category] ?? kEmergencyTips['general']!;
 }

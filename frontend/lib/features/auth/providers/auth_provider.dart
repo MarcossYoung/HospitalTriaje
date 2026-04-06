@@ -9,15 +9,17 @@ import '../../../core/network/api_client.dart';
 class AuthState {
   final String? token;
   final bool loading;
+  final bool initializing;
   final String? error;
 
-  const AuthState({this.token, this.loading = false, this.error});
+  const AuthState({this.token, this.loading = false, this.initializing = true, this.error});
 
   bool get isAuthenticated => token != null;
 
-  AuthState copyWith({String? token, bool? loading, String? error}) => AuthState(
+  AuthState copyWith({String? token, bool? loading, bool? initializing, String? error}) => AuthState(
         token: token ?? this.token,
         loading: loading ?? this.loading,
+        initializing: initializing ?? this.initializing,
         error: error,
       );
 }
@@ -33,14 +35,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> _loadToken() async {
     final token = await _storage.read(key: AppConstants.jwtStorageKey);
-    if (token != null) {
-      state = AuthState(token: token);
-    }
+    state = AuthState(token: token, initializing: false);
   }
 
   Future<void> _saveToken(String token) async {
     await _storage.write(key: AppConstants.jwtStorageKey, value: token);
-    state = AuthState(token: token);
+    state = AuthState(token: token, initializing: false);
   }
 
   Future<bool> register(String email, String password) async {
@@ -92,8 +92,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _storage.delete(key: AppConstants.jwtStorageKey);
-    await _googleSignIn.signOut();
-    state = const AuthState();
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {}
+    state = const AuthState(initializing: false);
   }
 
   String _extractError(DioException e) {

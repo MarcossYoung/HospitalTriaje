@@ -20,7 +20,10 @@
       "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && powershell -Command \"Invoke-WebRequest -Uri 'https://github.com/rsms/inter/releases/download/v4.0/Inter-4.0.zip' -OutFile 'C:\\\\\\\\Temp\\\\\\\\inter.zip'; Expand-Archive -Path 'C:\\\\\\\\Temp\\\\\\\\inter.zip' -DestinationPath 'C:\\\\\\\\Temp\\\\\\\\inter' -Force; Get-ChildItem 'C:\\\\\\\\Temp\\\\\\\\inter' -Recurse -Filter '*Regular*'\" 2>&1)",
       "Bash(powershell:*)",
       "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && flutter clean 2>&1)",
-      "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && /c/Users/marco/Dev/FrameWorks/flutter/bin/flutter clean 2>&1)"
+      "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && /c/Users/marco/Dev/FrameWorks/flutter/bin/flutter clean 2>&1)",
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(find /c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib -name \"*.dart\" -exec grep -l \"hospitalId\\\\|int.parse.*pathParameters\" {} \\\\;)",
+      "Bash(grep:*)"
     ]
   }
 }

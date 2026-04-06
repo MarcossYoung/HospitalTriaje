@@ -12,6 +12,7 @@ from app.models.hospital_status import HospitalStatus
 from app.models.referral import Referral
 from app.models.specialty import HospitalSpecialty, Specialty
 from app.schemas.hospital import (
+    HospitalInfoUpdate,
     HospitalOut,
     HospitalStatusUpdate,
     NearbyHospitalOut,
@@ -90,6 +91,21 @@ async def get_hospital(hospital_id: int, db: AsyncSession = Depends(get_db)):
     return _build_hospital_out(h)
 
 
+@router.put("/{hospital_id}/info", response_model=HospitalOut)
+async def update_hospital_info(
+    hospital_id: int,
+    body: HospitalInfoUpdate,
+    hospital: Hospital = Depends(verify_hospital_token),
+    db: AsyncSession = Depends(get_db),
+):
+    if body.address is not None:
+        hospital.address = body.address
+    if body.phone is not None:
+        hospital.phone = body.phone
+    await db.flush()
+    return _build_hospital_out(hospital)
+
+
 @router.post("/{hospital_id}/status")
 async def update_hospital_status(
     hospital_id: int,
@@ -148,6 +164,16 @@ async def override_specialist(
 
 @router.post("/referrals", response_model=ReferralOut, status_code=201)
 async def create_referral(body: ReferralCreate, db: AsyncSession = Depends(get_db)):
+    from app.models.triage_session import TriageSession
+
+    # Validate that session and hospital exist
+    session_result = await db.execute(select(TriageSession).where(TriageSession.id == body.session_id))
+    if not session_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Sesión de triaje no encontrada")
+    hospital_result = await db.execute(select(Hospital).where(Hospital.id == body.hospital_id))
+    if not hospital_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Hospital no encontrado")
+
     referral = Referral(session_id=body.session_id, hospital_id=body.hospital_id)
     db.add(referral)
     await db.flush()

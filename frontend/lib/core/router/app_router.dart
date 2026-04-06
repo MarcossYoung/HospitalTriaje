@@ -2,7 +2,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/screens/auth_screen.dart';
+import '../../features/auth/screens/evaluations_screen.dart';
 import '../../features/emergency/screens/emergency_tips_screen.dart';
+import '../../features/hospitals/screens/hospital_admin_screen.dart';
 import '../../features/hospitals/screens/hospital_detail_screen.dart';
 import '../../features/hospitals/screens/hospitals_list_screen.dart';
 import '../../features/map/screens/map_screen.dart';
@@ -25,7 +27,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'result',
                 builder: (context, state) {
-                  final extra = state.extra as Map<String, dynamic>;
+                  final extra = state.extra as Map<String, dynamic>?;
+                  if (extra == null) return const TriageScreen();
                   return TriageResultScreen(result: extra);
                 },
               ),
@@ -33,7 +36,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/hospitals',
-            builder: (context, state) => const HospitalsListScreen(),
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return HospitalsListScreen(
+                triageLevel: extra?['level'] as int?,
+                triageCategory: extra?['category'] as String?,
+              );
+            },
             routes: [
               GoRoute(
                 path: ':id',
@@ -44,12 +53,22 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           GoRoute(
+            path: '/hospitals/:id/admin',
+            builder: (context, state) => HospitalAdminScreen(
+              hospitalId: int.parse(state.pathParameters['id']!),
+            ),
+          ),
+          GoRoute(
             path: '/map',
             builder: (context, state) => const MapScreen(),
           ),
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: '/evaluations',
+            builder: (context, state) => const EvaluationsScreen(),
           ),
         ],
       ),
@@ -62,6 +81,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => EmergencyTipsScreen(
           category: state.pathParameters['category']!,
           triageLevel: int.tryParse(state.uri.queryParameters['level'] ?? '') ?? 1,
+          result: state.extra as Map<String, dynamic>?,
         ),
       ),
     ],

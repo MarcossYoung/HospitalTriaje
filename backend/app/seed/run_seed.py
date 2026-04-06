@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import AsyncSessionLocal
 from app.models.hospital import Hospital
 from app.models.hospital_status import HospitalStatus
+from app.models.obra_social import ObraSocial
 from app.models.patient import Patient
 from app.models.referral import Referral
 from app.models.specialty import HospitalSpecialty, Specialty
@@ -62,6 +63,14 @@ async def seed_hospitals(db: AsyncSession) -> None:
             db.add(status)
             await db.flush()
             logger.info("Created hospital: %s", item["name"])
+        else:
+            # Update mutable fields so changes to hospitals.json take effect on re-seed
+            h.name = item["name"]
+            h.address = item["address"]
+            h.lat = item["lat"]
+            h.lng = item["lng"]
+            h.phone = item.get("phone")
+            logger.info("Updated hospital: %s", item["name"])
 
 
 async def seed_hospital_specialties(db: AsyncSession, slug_to_id: dict[str, int]) -> None:
@@ -153,6 +162,36 @@ async def seed_trial_sessions(db: AsyncSession) -> None:
             await db.flush()
 
 
+async def seed_obras_sociales(db: AsyncSession) -> None:
+    """Seed obras sociales (upsert by code)."""
+    data = json.loads((SEED_DIR / "obras_sociales.json").read_text())
+    for item in data:
+        result = await db.execute(select(ObraSocial).where(ObraSocial.code == item["code"]))
+        os = result.scalar_one_or_none()
+        if not os:
+            os = ObraSocial(name=item["name"], code=item["code"])
+            db.add(os)
+            logger.info("Created obra social: %s", item["code"])
+        else:
+            os.name = item["name"]
+    await db.flush()
+    logger.info("Obras sociales seeded")
+
+
+async def seed_hospital_obras_sociales(db: AsyncSession) -> None:
+    """Seed hospital–obra social mappings (idempotent via ON CONFLICT DO NOTHING)."""
+    data = json.loads((SEED_DIR / "hospital_obras_sociales.json").read_text())
+    for item in data:
+        await db.execute(
+            text(
+                "INSERT INTO hospital_obras_sociales (hospital_id, obra_social_id) "
+                "VALUES (:hid, :osid) ON CONFLICT DO NOTHING"
+            ),
+            {"hid": item["hospital_id"], "osid": item["obra_social_id"]},
+        )
+    logger.info("Hospital obras sociales seeded")
+
+
 async def reset_sequences(db: AsyncSession) -> None:
     """Advance PostgreSQL sequences past any explicitly-seeded IDs."""
     tables = ["hospitals", "patients", "triage_sessions", "referrals", "specialties"]
@@ -176,6 +215,8 @@ async def run() -> None:
             await seed_trial_patients(db)
             await seed_hospital_statuses(db)
             await seed_trial_sessions(db)
+            await seed_obras_sociales(db)
+            await seed_hospital_obras_sociales(db)
             await reset_sequences(db)
             await db.commit()
             logger.info("Seed completed successfully")

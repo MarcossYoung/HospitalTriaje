@@ -1,3 +1,6 @@
+import logging
+import warnings
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,3 +43,12 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+if settings.secret_key == "change-me-in-production" and settings.app_env != "development":
+    warnings.warn(
+        "SECRET_KEY is using the insecure default value! Set SECRET_KEY env var for production.",
+        stacklevel=1,
+    )
+    logging.getLogger(__name__).warning(
+        "SECURITY WARNING: SECRET_KEY is using the insecure default. JWTs can be forged."
+    )

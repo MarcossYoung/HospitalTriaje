@@ -4,12 +4,24 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+
+    if (auth.initializing) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Mi perfil')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     if (!auth.isAuthenticated) {
       return Scaffold(
@@ -40,7 +52,8 @@ class ProfileScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.history),
             title: const Text('Mis evaluaciones'),
-            onTap: () {},
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/evaluations'),
           ),
           const Divider(),
           ListTile(
@@ -48,7 +61,7 @@ class ProfileScreen extends ConsumerWidget {
             title: const Text('Cerrar sesión'),
             onTap: () async {
               await ref.read(authProvider.notifier).logout();
-              if (context.mounted) context.go('/triage');
+              if (mounted) context.go('/triage');
             },
           ),
           const Divider(),
@@ -67,9 +80,9 @@ class ProfileScreen extends ConsumerWidget {
                   ],
                 ),
               );
-              if (confirm == true && context.mounted) {
+              if (confirm == true) {
                 await ref.read(authProvider.notifier).logout();
-                context.go('/triage');
+                if (mounted) context.go('/triage');
               }
             },
           ),

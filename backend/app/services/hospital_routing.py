@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import noload
 
 from app.models.hospital import Hospital
 from app.models.hospital_status import HospitalStatus
@@ -68,7 +69,19 @@ async def get_nearby_hospitals(
     triage_level: int | None = None,
     limit: int = 5,
 ) -> list[dict]:
-    result = await db.execute(select(Hospital))
+    # Pre-filter by bounding box (~55 km at Argentina's latitude) before Python sees any rows.
+    # Skip relationships not used by the scoring algorithm.
+    _BBOX_DEG = 0.5
+    result = await db.execute(
+        select(Hospital)
+        .where(Hospital.lat.between(lat - _BBOX_DEG, lat + _BBOX_DEG))
+        .where(Hospital.lng.between(lng - _BBOX_DEG, lng + _BBOX_DEG))
+        .options(
+            noload(Hospital.referrals),
+            noload(Hospital.on_call_doctors),
+            noload(Hospital.obras_sociales),
+        )
+    )
     hospitals: list[Hospital] = list(result.scalars().all())
 
     scored: list[dict] = []
@@ -84,25 +97,26 @@ async def get_nearby_hospitals(
         # Specialist match
         specialist_match = 0
         if specialty_slug:
-            for hs in h.specialties:
-                if hs.specialty and hs.specialty.slug == specialty_slug:
-                    if _is_specialty_available(hs):
-                        specialist_match = 1
-                    else:
-                        # Required specialist not available → skip hospital
-                        break
-            else:
-                pass  # specialty not listed → skip
-            # If specialty required but not available, exclude hospital
-            if specialty_slug:
-                has_available = any(
-                    hs.specialty and hs.specialty.slug == specialty_slug and _is_specialty_available(hs)
-                    for hs in h.specialties
-                )
-                if not has_available:
-                    continue
+            specialist_match = int(any(
+                hs.specialty and hs.specialty.slug == specialty_slug and _is_specialty_available(hs)
+                for hs in h.specialties
+            ))
+            if not specialist_match:
+                continue  # required specialty not available → skip hospital
 
-        score = (distance_km * 0.4) + (wait_time_min * 0.4) - (specialist_match * 10 * 0.2)
+        # Urgent/immediate cases (level 1–2): prioritise short waits over distance
+        if triage_level in (1, 2):
+            wait_w = 0.8
+            dist_w = 0.2
+        else:
+            wait_w = 0.4
+            dist_w = 0.4
+
+        # For level-1 (Immediate) skip hospitals with no available beds
+        if triage_level == 1 and h.status and h.status.available_beds == 0:
+            continue
+
+        score = (distance_km * dist_w) + (wait_time_min * wait_w) - (specialist_match * 10 * 0.2)
 
         scored.append({
             "hospital": h,

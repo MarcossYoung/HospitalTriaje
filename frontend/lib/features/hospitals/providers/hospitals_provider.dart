@@ -59,7 +59,7 @@ class HospitalsNotifier extends StateNotifier<HospitalsState> {
   }
 }
 
-final hospitalsProvider = StateNotifierProvider<HospitalsNotifier, HospitalsState>((ref) {
+final hospitalsProvider = StateNotifierProvider.autoDispose<HospitalsNotifier, HospitalsState>((ref) {
   return HospitalsNotifier(ref.watch(dioProvider));
 });
 
@@ -83,7 +83,12 @@ Future<void> _connectSSE(
   try {
     final resp = await dio.get<ResponseBody>(
       '/hospitals/stream',
-      options: Options(responseType: ResponseType.stream),
+      options: Options(
+        responseType: ResponseType.stream,
+        // SSE is a long-lived connection — disable the 30 s receiveTimeout
+        // that would otherwise kill and endlessly reconnect the stream.
+        receiveTimeout: const Duration(hours: 1),
+      ),
     );
     final stream = resp.data!.stream;
     StringBuffer buffer = StringBuffer();
@@ -109,8 +114,11 @@ Future<void> _connectSSE(
         }
       }
     }
+    // Stream ended normally (server closed connection) — reconnect
+    await Future.delayed(const Duration(seconds: 5));
+    if (!controller.isClosed) _connectSSE(dio, controller);
   } catch (_) {
-    // Silently reconnect after error — can add exponential backoff
+    // Reconnect after error
     await Future.delayed(const Duration(seconds: 5));
     if (!controller.isClosed) _connectSSE(dio, controller);
   }

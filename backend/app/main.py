@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, hospitals, patients, stream, triage
+from app.routers import admin, auth, hospitals, patients, stream, triage
 
 
 @asynccontextmanager
@@ -37,6 +37,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(triage.router, prefix="/triage", tags=["triage"])
 app.include_router(stream.router, prefix="/hospitals", tags=["stream"])
+app.include_router(admin.router, prefix="/hospitals", tags=["admin"])
 app.include_router(hospitals.router, prefix="/hospitals", tags=["hospitals"])
 app.include_router(patients.router, prefix="/patients", tags=["patients"])
 

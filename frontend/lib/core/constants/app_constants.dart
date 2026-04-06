@@ -18,4 +18,6 @@ class AppConstants {
   // Hive box names
   static const triageBox = 'triageBox';
   static const settingsBox = 'settingsBox';
+
+  static String hospitalApiTokenKey(int id) => 'hospital_api_token_$id';
 }

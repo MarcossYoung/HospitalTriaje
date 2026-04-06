@@ -19,7 +19,7 @@ class EmergencyTipsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tips = getTips(category);
+    final tips = getTips(category, mtsLevel: triageLevel);
     final color = TriageColors.forLevel(triageLevel);
 
     return Scaffold(
@@ -146,16 +146,21 @@ class EmergencyTipsScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => context.push('/hospitals'),
+              onPressed: () => context.go(
+                '/hospitals',
+                extra: {'level': triageLevel, 'category': category},
+              ),
               icon: const Icon(Icons.local_hospital),
               label: const Text('Ver hospitales cercanos'),
             ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: () => context.push('/triage/result', extra: result ?? {}),
-              icon: const Icon(Icons.assessment),
-              label: const Text('Ver resultado de triaje'),
-            ),
+            if (result != null) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => context.push('/triage/result', extra: result),
+                icon: const Icon(Icons.assessment),
+                label: const Text('Ver resultado de triaje'),
+              ),
+            ],
           ],
         ),
       ),

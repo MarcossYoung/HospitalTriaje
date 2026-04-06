@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../triage/providers/triage_provider.dart';
 import '../models/hospital_model.dart';
 
 class HospitalDetailScreen extends ConsumerStatefulWidget {
@@ -67,7 +68,21 @@ class _HospitalDetailScreenState extends ConsumerState<HospitalDetailScreen> {
     if (_error != null) {
       return Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text('Error: $_error')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text('No se pudo cargar la información del hospital'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _load,
+                child: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
       );
     }
     final h = _hospital!;
@@ -118,7 +133,18 @@ class _HospitalDetailScreenState extends ConsumerState<HospitalDetailScreen> {
           ],
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () => _createReferral(1), // Replace with actual session_id from state
+            onPressed: () {
+              final sessionId = ref.read(triageProvider).result?['session_id'] as int?;
+              if (sessionId == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Completá un triaje primero para poder derivarte'),
+                  ),
+                );
+                return;
+              }
+              _createReferral(sessionId);
+            },
             icon: const Icon(Icons.send),
             label: const Text('Derivar a este hospital'),
           ),

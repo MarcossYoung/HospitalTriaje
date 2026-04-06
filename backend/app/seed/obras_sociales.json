@@ -1,0 +1,20 @@
+[
+  {"name": "OSDE", "code": "OSDE"},
+  {"name": "PAMI", "code": "PAMI"},
+  {"name": "IOMA", "code": "IOMA"},
+  {"name": "Swiss Medical", "code": "SWISS"},
+  {"name": "Galeno", "code": "GALENO"},
+  {"name": "Medicus", "code": "MEDICUS"},
+  {"name": "Omint", "code": "OMINT"},
+  {"name": "OSPEDYC", "code": "OSPEDYC"},
+  {"name": "OSECAC", "code": "OSECAC"},
+  {"name": "OSPREROVI", "code": "OSPREROVI"},
+  {"name": "Unión Personal", "code": "UNION_PERSONAL"},
+  {"name": "Jerárquicos Salud", "code": "JERARQUICOS"},
+  {"name": "Avalian", "code": "AVALIAN"},
+  {"name": "OSAM", "code": "OSAM"},
+  {"name": "Sancor Salud", "code": "SANCOR_SALUD"},
+  {"name": "Accord Salud", "code": "ACCORD"},
+  {"name": "Sancor Seguros Salud", "code": "SANCOR_SEGUROS"},
+  {"name": "Federada Salud", "code": "FEDERADA"}
+]
