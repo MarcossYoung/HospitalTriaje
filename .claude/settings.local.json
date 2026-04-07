@@ -23,7 +23,8 @@
       "Bash(cd /c/Users/marco/Dev/Projects/HospitalTriaje/frontend && /c/Users/marco/Dev/FrameWorks/flutter/bin/flutter clean 2>&1)",
       "Bash(grep -E \"\\\\.py$\")",
       "Bash(find /c/Users/marco/Dev/Projects/HospitalTriaje/frontend/lib -name \"*.dart\" -exec grep -l \"hospitalId\\\\|int.parse.*pathParameters\" {} \\\\;)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(python -c ':*)"
     ]
   }
 }
