@@ -41,7 +41,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        BASE_HREF: /triaje/
+        DEPLOY_SUBDIR: triaje
     restart: unless-stopped
+    environment:
+      BACKEND_HOST: backend:8000
+      BASE_PATH: /triaje
     ports:
       - "80:80"
     depends_on:

@@ -1,6 +1,7 @@
 import logging
 import warnings
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +15,14 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = "postgresql+asyncpg://triaje:triaje_pass@db:5432/hospitaltriaje"
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def fix_db_url(cls, v: str) -> str:
+        # Railway PostgreSQL addon provides postgresql:// — asyncpg needs postgresql+asyncpg://
+        if isinstance(v, str) and v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
 
     # Security
     secret_key: str = "change-me-in-production"

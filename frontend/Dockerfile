@@ -5,9 +5,23 @@ COPY pubspec.yaml pubspec.lock* ./
 RUN flutter pub get
 
 COPY . .
-RUN flutter build web --release --dart-define=API_BASE_URL=/api --base-href=/triaje/
+
+# BASE_HREF controls the Flutter web base path.
+# Railway (root domain): /     Local docker-compose: /triaje/
+ARG BASE_HREF=/
+RUN flutter build web --release --dart-define=API_BASE_URL=/api --base-href=${BASE_HREF}
 
 FROM nginx:alpine
-COPY --from=builder /app/build/web /usr/share/nginx/html/triaje
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# DEPLOY_SUBDIR controls where built files land under /usr/share/nginx/html.
+# Railway (root): empty     Local docker-compose: triaje
+ARG DEPLOY_SUBDIR=
+COPY --from=builder /app/build/web /tmp/webdist/
+RUN mkdir -p /usr/share/nginx/html/${DEPLOY_SUBDIR} \
+    && cp -a /tmp/webdist/. /usr/share/nginx/html/${DEPLOY_SUBDIR}/ \
+    && rm -rf /tmp/webdist
+
+# Use nginx template mechanism — envsubst runs automatically on *.template files at startup
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
 EXPOSE 80
