@@ -239,6 +239,13 @@ class _HospitalCard extends StatelessWidget {
                           padding: EdgeInsets.zero,
                           visualDensity: VisualDensity.compact,
                         ),
+                      if (hospital.specialties.any((s) => s.isAvailable))
+                        Chip(
+                          label: const Text('guardia especializada'),
+                          avatar: const Icon(Icons.medical_services, size: 16),
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                        ),
                     ],
                   ),
                 ],

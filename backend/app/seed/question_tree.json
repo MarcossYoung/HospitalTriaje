@@ -8,7 +8,8 @@
         {"label_es": "Pérdida de conciencia, convulsiones o dificultad para hablar", "next_node_id": "neuro_initial"},
         {"label_es": "Sangrado activo o herida grave", "next_node_id": "bleeding_initial"},
         {"label_es": "Dolor abdominal o náuseas intensas", "next_node_id": "abdominal_initial"},
-        {"label_es": "Fiebre, malestar general o síntomas leves", "next_node_id": "general_initial"}
+        {"label_es": "Fiebre, malestar general o síntomas leves", "next_node_id": "general_initial"},
+        {"label_es": "Lesiones, golpes o trauma físico", "next_node_id": "trauma_initial"}
       ]
     },
 
@@ -115,6 +116,23 @@
         {"label_es": "Malestar general, fatiga o dolor muscular", "next_node_id": "level4_general"},
         {"label_es": "Tos, dolor de garganta o congestión nasal", "next_node_id": "level5_respiratory"},
         {"label_es": "Otros síntomas leves", "next_node_id": "level5_general"}
+      ]
+    },
+
+    "trauma_initial": {
+      "question_es": "¿Cómo describiría la lesión?",
+      "options": [
+        {"label_es": "Accidente grave, caída de altura o pérdida de consciencia", "next_node_id": "level1_bleeding"},
+        {"label_es": "Sangrado que no se detiene o herida profunda", "next_node_id": "level2_bleeding"},
+        {"label_es": "Posible fractura o hueso roto", "next_node_id": "trauma_fracture"},
+        {"label_es": "Golpe, torcedura o lesión leve", "next_node_id": "level4_trauma"}
+      ]
+    },
+    "trauma_fracture": {
+      "question_es": "¿La fractura involucra cuello, espalda o cabeza?",
+      "options": [
+        {"label_es": "Sí, podría ser columna o cráneo", "next_node_id": "level2_bleeding"},
+        {"label_es": "No, es en brazo, pierna u otra extremidad", "next_node_id": "level3_bleeding"}
       ]
     },
 

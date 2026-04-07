@@ -22,6 +22,7 @@ class TriageState {
   final bool loading;
   final bool offline;
   final String? error;
+  final String? obraSocial;
 
   const TriageState({
     this.tree,
@@ -31,6 +32,7 @@ class TriageState {
     this.loading = false,
     this.offline = false,
     this.error,
+    this.obraSocial,
   });
 
   TriageState copyWith({
@@ -41,6 +43,7 @@ class TriageState {
     bool? loading,
     bool? offline,
     String? error,
+    Object? obraSocial = _sentinel,
   }) =>
       TriageState(
         tree: tree ?? this.tree,
@@ -54,6 +57,9 @@ class TriageState {
         loading: loading ?? this.loading,
         offline: offline ?? this.offline,
         error: error,
+        obraSocial: obraSocial == _sentinel
+            ? this.obraSocial
+            : obraSocial as String?,
       );
 
   Map<String, dynamic>? get currentNode {
@@ -140,6 +146,10 @@ class TriageNotifier extends StateNotifier<TriageState> {
     state = state.copyWith(answers: newAnswers, currentNodeId: prevNodeId, error: null);
   }
 
+  void setObraSocial(String value) {
+    state = state.copyWith(obraSocial: value);
+  }
+
   void reset() {
     if (state.tree != null) {
       state = state.copyWith(
@@ -147,6 +157,7 @@ class TriageNotifier extends StateNotifier<TriageState> {
         currentNodeId: state.tree!['root'] as String,
         result: null,
         error: null,
+        obraSocial: null,
       );
     }
   }

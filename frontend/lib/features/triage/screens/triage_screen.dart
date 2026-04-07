@@ -37,7 +37,8 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
     final notifier = ref.read(triageProvider.notifier);
     notifier.selectAnswer(index);
     final state = ref.read(triageProvider);
-    if (state.isLeaf) await _evaluateAndNavigate();
+    if (state.isLeaf && state.obraSocial != null) await _evaluateAndNavigate();
+    // If isLeaf but obraSocial == null, _buildBody shows the obra social question
   }
 
   @override
@@ -142,6 +143,11 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
     final node = state.currentNode;
     if (node == null) return const Center(child: Text('Error en el árbol'));
 
+    // Obra social question shown after all medical questions are answered.
+    if (state.isLeaf && state.obraSocial == null) {
+      return _buildObraSocialQuestion(state.answers.length);
+    }
+
     // Leaf node: evaluation is in progress or failed.
     if (state.isLeaf) {
       if (state.loading) return const SizedBox.shrink(); // Loading overlay handles UI.
@@ -195,6 +201,66 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
                 ),
                 const SizedBox(height: AppSpacing.xxxl),
                 ..._buildOptions(node),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static const _obraSocialOptions = [
+    'PAMI',
+    'Prepaga o obra social privada (OSDE, Swiss Medical, Galeno, etc.)',
+    'Obra social sindical o provincial (IOMA, etc.)',
+    'Sin cobertura / particular',
+  ];
+
+  Widget _buildObraSocialQuestion(int stepCount) {
+    return Column(
+      children: [
+        const LinearProgressIndicator(value: 1.0),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Pregunta ${stepCount + 1}',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.grey),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  '¿Qué cobertura médica tiene?',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.xxxl),
+                ..._obraSocialOptions.map((label) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Semantics(
+                    label: 'Opción de cobertura: $label',
+                    button: true,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        alignment: Alignment.centerLeft,
+                        minimumSize: const Size.fromHeight(AppSizing.minTapTarget),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
+                          vertical: AppSpacing.lg,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                        ),
+                      ),
+                      onPressed: () async {
+                        ref.read(triageProvider.notifier).setObraSocial(label);
+                        await _evaluateAndNavigate();
+                      },
+                      child: Text(label, style: const TextStyle(fontSize: 15)),
+                    ),
+                  ),
+                )),
               ],
             ),
           ),
