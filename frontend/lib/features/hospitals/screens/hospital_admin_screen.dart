@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../../core/network/api_client.dart';
 import '../models/hospital_model.dart';
 import '../models/on_call_doctor_model.dart';
-import '../models/obra_social_model.dart';
 import '../providers/admin_provider.dart';
 import '../providers/hospital_token_provider.dart';
 

@@ -7,7 +7,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../hospitals/models/hospital_model.dart';
 import '../../hospitals/providers/hospitals_provider.dart';
-import '../../../core/theme/app_theme.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
