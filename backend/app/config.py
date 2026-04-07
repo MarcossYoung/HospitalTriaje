@@ -19,7 +19,12 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def fix_db_url(cls, v: str) -> str:
-        # Railway PostgreSQL addon provides postgresql:// — asyncpg needs postgresql+asyncpg://
+        import os
+        # Prefer DATABASE_PUBLIC_URL if set — Railway's private URL requires internal networking
+        # but the public URL works from anywhere.
+        public = os.environ.get("DATABASE_PUBLIC_URL", "")
+        if public:
+            v = public
         if isinstance(v, str) and v.startswith("postgresql://"):
             return v.replace("postgresql://", "postgresql+asyncpg://", 1)
         return v
