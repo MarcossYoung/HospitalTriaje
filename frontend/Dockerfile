@@ -21,7 +21,9 @@ RUN mkdir -p /usr/share/nginx/html/${DEPLOY_SUBDIR} \
     && cp -a /tmp/webdist/. /usr/share/nginx/html/${DEPLOY_SUBDIR}/ \
     && rm -rf /tmp/webdist
 
-# Use nginx template mechanism — envsubst runs automatically on *.template files at startup
 COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
+CMD ["/docker-entrypoint.sh"]
