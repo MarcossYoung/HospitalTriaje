@@ -5,6 +5,6 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "alembic upgrade head && echo 'Alembic OK' && python -m app.seed.run_seed && echo 'Seed OK'"
+    "startCommand": "alembic upgrade head; echo \"Alembic exit: $?\"; python -m app.seed.run_seed; echo \"Seed exit: $?\""
   }
 }
