@@ -5,6 +5,5 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "alembic upgrade head; echo \"Alembic exit: $?\"; python -m app.seed.run_seed; echo \"Seed exit: $?\""
-  }
+"startCommand": "python -m app.seed.run_seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT"  }
 }
