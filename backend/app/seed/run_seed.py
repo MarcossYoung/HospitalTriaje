@@ -182,12 +182,17 @@ async def seed_hospital_obras_sociales(db: AsyncSession) -> None:
     """Seed hospital–obra social mappings (idempotent via ON CONFLICT DO NOTHING)."""
     data = json.loads((SEED_DIR / "hospital_obras_sociales.json").read_text())
     for item in data:
+        result = await db.execute(select(ObraSocial).where(ObraSocial.code == item["obra_social_code"]))
+        os = result.scalar_one_or_none()
+        if os is None:
+            logger.warning("Obra social code not found: %s", item["obra_social_code"])
+            continue
         await db.execute(
             text(
                 "INSERT INTO hospital_obras_sociales (hospital_id, obra_social_id) "
                 "VALUES (:hid, :osid) ON CONFLICT DO NOTHING"
             ),
-            {"hid": item["hospital_id"], "osid": item["obra_social_id"]},
+            {"hid": item["hospital_id"], "osid": os.id},
         )
     logger.info("Hospital obras sociales seeded")
 
