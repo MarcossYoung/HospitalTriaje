@@ -13,10 +13,12 @@ import app.models  # noqa: F401
 
 config = context.config
 
-# Override sqlalchemy.url with DATABASE_URL env var (required for Railway/production)
-database_url = os.getenv("DATABASE_URL", "")
+# Override sqlalchemy.url — prefer DATABASE_PUBLIC_URL (Railway public proxy) over
+# DATABASE_URL (private hostname) to avoid DNS hangs with private networking.
+database_url = os.getenv("DATABASE_PUBLIC_URL") or os.getenv("DATABASE_URL", "")
 if database_url:
-    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
+    if database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
     config.set_main_option("sqlalchemy.url", database_url)
 
 if config.config_file_name is not None:
