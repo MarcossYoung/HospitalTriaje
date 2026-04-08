@@ -46,7 +46,6 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
     final state = ref.watch(triageProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1565C0),
       appBar: AppBar(
         title: const Text('Evaluación de Triaje'),
         leading: state.answers.isNotEmpty && !state.isLeaf
