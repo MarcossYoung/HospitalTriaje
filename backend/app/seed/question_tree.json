@@ -9,7 +9,8 @@
         {"label_es": "Sangrado activo o herida grave", "next_node_id": "bleeding_initial"},
         {"label_es": "Dolor abdominal o náuseas intensas", "next_node_id": "abdominal_initial"},
         {"label_es": "Fiebre, malestar general o síntomas leves", "next_node_id": "general_initial"},
-        {"label_es": "Lesiones, golpes o trauma físico", "next_node_id": "trauma_initial"}
+        {"label_es": "Lesiones, golpes o trauma físico", "next_node_id": "trauma_initial"},
+        {"label_es": "Otros síntomas", "next_node_id": "general_initial"}
       ]
     },
 
